@@ -2,3 +2,18 @@ __pycache__/
 *.pyc
 *~
 
+.idea/
+.vscode/
+.tmp
+.cache
+config.ini
+snapshots/**
+startup-scripts/**
+.openart_key
+.youml
+matrix_auth
+channels.list
+comfyworkflows_sharekey
+
+Global/detection_models/sync_batchnorm/
+Global/detection_models/Synchronized-BatchNorm-PyTorch/
