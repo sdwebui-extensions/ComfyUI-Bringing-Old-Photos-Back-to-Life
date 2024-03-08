@@ -37,7 +37,7 @@ class LoadScratchMaskModel:
     def load_model(self, scratch_model: str):
         model_path = scratch_models_paths + scratch_model
         model = detection.load_model(
-            device_id=comfy.model_management.get_torch_device(), 
+            device_ids=comfy.model_management.get_torch_device(), 
             checkpoint_path=model_path, 
         )
         return (model,)
@@ -91,7 +91,7 @@ class ScratchMask:
             masks.append(detection.detect_scratches(
                 image=torchvision.transforms.ToPILImage()(image[i]), 
                 model=scratch_model,
-                device_id=comfy.model_management.get_torch_device(), 
+                device_ids=comfy.model_management.get_torch_device(), 
                 input_size=input_size, 
                 resize_method=self.UPSCALE_METHODS[resize_method], 
             ))

@@ -74,7 +74,7 @@ def blend_mask(img, mask):
     return Image.fromarray((np_img * (1 - mask) + mask * 255.0).astype("uint8")).convert("RGB")
 
 
-def load_model(device_id: int|str, checkpoint_path: str):
+def load_model(device_ids: int|str, checkpoint_path: str):
     model = networks.UNet(
         in_channels=1,
         out_channels=1,
@@ -91,13 +91,13 @@ def load_model(device_id: int|str, checkpoint_path: str):
     checkpoint = torch.load(checkpoint_path, map_location="cpu")
     model.load_state_dict(checkpoint["model_state"])
     try:
-        device_id = int(device_id)
+        device_ids = int(device_ids)
     except:
         pass
-    if type(device_id) is int and device_id < 0:
+    if type(device_ids) is int and device_ids < 0:
         model.cpu()
     else:
-        model.to(device_id)
+        model.to(device_ids)
     model.eval()
     return model
 
@@ -105,7 +105,7 @@ def load_model(device_id: int|str, checkpoint_path: str):
 def detect_scratches(
     image: Image.Image, 
     model: networks.UNet, 
-    device_id: int|str, 
+    device_ids: int|str, 
     input_size: str, 
     resize_method: Image.Resampling=Image.Resampling.BICUBIC, 
 ) -> torch.Tensor:
@@ -116,13 +116,13 @@ def detect_scratches(
     _, _, ow, oh = image.shape
     scaled_image = scale_tensor(image)
     try:
-        device_id = int(device_id)
+        device_ids = int(device_ids)
     except:
         pass
-    if type(device_id) is int and device_id < 0:
+    if type(device_ids) is int and device_ids < 0:
         scaled_image = scaled_image.cpu()
     else:
-        scaled_image = scaled_image.to(device_id)
+        scaled_image = scaled_image.to(device_ids)
 
     with torch.no_grad():
         mask = torch.sigmoid(model(scaled_image))
@@ -139,7 +139,10 @@ def main(config):
         raise RuntimeError("Input and output directories cannot be the same!")
 
     # load model
-    model = load_model(config.device_id, config.checkpoint_path)
+    model = load_model(
+        device_ids=config.device_ids, 
+        checkpoint_path=config.checkpoint_path
+    )
 
     for file in os.listdir(config.input_image_dir):
         file_path = os.path.join(config.input_image_dir, file)
@@ -153,7 +156,12 @@ def main(config):
             continue
 
         # compute mask
-        mask = detect_scratches(image, model, config.device_id, config.input_size)
+        mask = detect_scratches(
+            image=image, 
+            model=model, 
+            device_ids=config.device_ids, 
+            input_size=config.input_size
+        )
 
         # save mask
         filename = os.path.split(file_path)[1]
@@ -174,7 +182,7 @@ def main(config):
 if __name__ == "__main__":
     parser = argparse.ArgumentParser()
     parser.add_argument('--checkpoint_path', type=str, default="./checkpoints/detection/FT_Epoch_latest.pt", help='Checkpoint Path')
-    parser.add_argument("--device_id", type=str, default=0, help='Default gpu_id=0, cpu_id=-1, multiple gpus=\"2,3\"')
+    parser.add_argument("--device_ids", type=str, default=0, help='Default gpu_id=0, cpu_id=-1, multiple gpus=\"2,3\"')
     parser.add_argument("--input_image_dir", type=str)
     parser.add_argument("--output_mask_dir", type=str)
     parser.add_argument("--input_size", type=str, default="scale_256", help="resize_256|full_size|scale_256")
