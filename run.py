@@ -96,18 +96,12 @@ if __name__ == "__main__":
     stage_2_output_dir = os.path.join(opts.output_folder, "stage_2_detection_output")
     if not os.path.exists(stage_2_output_dir):
         os.makedirs(stage_2_output_dir)
-    if opts.HR:
-        stage_2_command = (
-            "python detect_all_dlib_HR.py" 
-            + " --url " + stage_2_input_dir 
-            + " --save_url " + stage_2_output_dir 
-        )
-    else:
-        stage_2_command = (
-            "python detect_all_dlib.py" 
-            + " --url " + stage_2_input_dir 
-            + " --save_url " + stage_2_output_dir 
-        )
+    stage_2_command = (
+        "python detect_all_dlib.py" 
+        + " --url " + stage_2_input_dir 
+        + " --save_url " + stage_2_output_dir 
+        + " --side_length " + str(512 if opts.HR else 256) 
+    )
     run_cmd(stage_2_command)
     print("Finish Stage 2 ...")
     print("\n")

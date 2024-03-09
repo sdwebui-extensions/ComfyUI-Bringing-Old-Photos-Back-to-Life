@@ -1,25 +1,16 @@
 # Copyright (c) Microsoft Corporation.
 # Licensed under the MIT License.
 
-import torch
 import numpy as np
 import skimage.io as io
 
-# from FaceSDK.face_sdk import FaceDetection
-# from face_sdk import FaceDetection
 import matplotlib.pyplot as plt
 from matplotlib.patches import Rectangle
 from skimage.transform import SimilarityTransform
 from skimage.transform import warp
 from PIL import Image
-import torch.nn.functional as F
-import torchvision as tv
-import torchvision.utils as vutils
-import time
-import cv2
 import os
 from skimage import img_as_ubyte
-import json
 import argparse
 import dlib
 
@@ -77,10 +68,9 @@ def search(face_landmarks):
     return results
 
 
-def compute_transformation_matrix(img, landmark, normalize, target_face_scale=1.0):
-
+def compute_transformation_matrix(img, landmark, normalize, side_length, target_face_scale=1.0):
     std_pts = _standard_face_pts()  # [-1,1]
-    target_pts = (std_pts * target_face_scale + 1) / 2 * 256.0
+    target_pts = (std_pts * target_face_scale + 1) / 2 * side_length
 
     # print(target_pts)
 
@@ -127,58 +117,55 @@ def affine2theta(affine, input_w, input_h, target_w, target_h):
     return theta
 
 
-if __name__ == "__main__":
+def get_aligned_faces(face_detector, landmark_locator, image: Image.Image, side_length: int):
+    # extract faces
+    image = np.array(image)
+    faces = face_detector(image)
 
+    aligned_faces = []
+    for face in faces:
+        # get face landmarks
+        face_landmarks = landmark_locator(image, face)
+        current_fl = search(face_landmarks)
+
+        # align face
+        affine = compute_transformation_matrix(image, current_fl, False, float(side_length), target_face_scale=1.3)
+        aligned_face = warp(image, affine, output_shape=(side_length, side_length, 3))
+        aligned_faces.append(aligned_face)
+
+    return aligned_faces
+
+
+def main(checkpoint_path: str, image_dir: str, output_dir: str, side_length: int):
+    # make directories
+    os.makedirs(image_dir, exist_ok=True)
+    os.makedirs(output_dir, exist_ok=True)
+
+    # load models
+    face_detector = dlib.get_frontal_face_detector()
+    landmark_locator = dlib.shape_predictor(checkpoint_path)
+
+    for x in os.listdir(image_dir):
+        # load image
+        image_path = os.path.join(image_dir, x)
+        image = Image.open(image_path).convert("RGB")
+
+        # get aligned faces
+        aligned_faces = get_aligned_faces(face_detector, landmark_locator, image, side_length)
+        print(str(len(aligned_faces)) + " faces in " + x)
+
+        # save faces
+        for face_id, aligned_face in enumerate(aligned_faces):
+            img_name = os.path.splitext(x)[0] + "_" + str(face_id + 1)
+            io.imsave(os.path.join(output_dir, img_name + ".png"), img_as_ubyte(aligned_face))
+
+
+if __name__ == "__main__":
     parser = argparse.ArgumentParser()
+    parser.add_argument("--model_url", type=str, default="shape_predictor_68_face_landmarks.dat", help="shape predictor")
     parser.add_argument("--url", type=str, default="/home/jingliao/ziyuwan/celebrities", help="input")
-    parser.add_argument(
-        "--save_url", type=str, default="/home/jingliao/ziyuwan/celebrities_detected_face_reid", help="output"
-    )
+    parser.add_argument("--save_url", type=str, default="/home/jingliao/ziyuwan/celebrities_detected_face_reid", help="output")
+    parser.add_argument("--side_length", type=int, default=256, help="default is 256, HR is 512")
     opts = parser.parse_args()
 
-    url = opts.url
-    save_url = opts.save_url
-
-    ### If the origin url is None, then we don't need to reid the origin image
-
-    os.makedirs(url, exist_ok=True)
-    os.makedirs(save_url, exist_ok=True)
-
-    face_detector = dlib.get_frontal_face_detector()
-    landmark_locator = dlib.shape_predictor("shape_predictor_68_face_landmarks.dat")
-
-    count = 0
-
-    map_id = {}
-    for x in os.listdir(url):
-        img_url = os.path.join(url, x)
-        pil_img = Image.open(img_url).convert("RGB")
-
-        image = np.array(pil_img)
-
-        start = time.time()
-        faces = face_detector(image)
-        done = time.time()
-
-        if len(faces) == 0:
-            print("Warning: There is no face in %s" % (x))
-            continue
-
-        print(len(faces))
-
-        if len(faces) > 0:
-            for face_id in range(len(faces)):
-                current_face = faces[face_id]
-                face_landmarks = landmark_locator(image, current_face)
-                current_fl = search(face_landmarks)
-
-                affine = compute_transformation_matrix(image, current_fl, False, target_face_scale=1.3)
-                aligned_face = warp(image, affine, output_shape=(256, 256, 3))
-                img_name = x[:-4] + "_" + str(face_id + 1)
-                io.imsave(os.path.join(save_url, img_name + ".png"), img_as_ubyte(aligned_face))
-
-        count += 1
-
-        if count % 1000 == 0:
-            print("%d have finished ..." % (count))
-
+    main(opts.model_url, opts.url, opts.save_url, opts.side_length)
