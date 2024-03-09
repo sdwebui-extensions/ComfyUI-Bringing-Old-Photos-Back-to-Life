@@ -17,3 +17,4 @@ comfyworkflows_sharekey
 
 Global/detection_models/sync_batchnorm/
 Global/detection_models/Synchronized-BatchNorm-PyTorch/
+outputs/

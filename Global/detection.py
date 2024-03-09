@@ -133,19 +133,19 @@ def detect_scratches(
 
 
 def main(config):
-    if not os.path.isdir(config.input_image_dir):
+    if not os.path.isdir(config.test_path):
         raise RuntimeError("Image directory does not exist!")
-    if config.input_image_dir == config.output_mask_dir:
+    if config.test_path == config.output_dir:
         raise RuntimeError("Input and output directories cannot be the same!")
 
     # load model
     model = load_model(
-        device_ids=config.device_ids, 
-        checkpoint_path=config.checkpoint_path
+        device_ids=config.GPU, 
+        checkpoint_path=config.checkpoint_name
     )
 
-    for file in os.listdir(config.input_image_dir):
-        file_path = os.path.join(config.input_image_dir, file)
+    for file in os.listdir(config.test_path):
+        file_path = os.path.join(config.test_path, file)
         if not os.path.isfile(file_path):
             continue
 
@@ -159,13 +159,13 @@ def main(config):
         mask = detect_scratches(
             image=image, 
             model=model, 
-            device_ids=config.device_ids, 
+            device_ids=config.GPU, 
             input_size=config.input_size
         )
 
         # save mask
         filename = os.path.split(file_path)[1]
-        mask_path = os.path.join(config.output_mask_dir, os.path.splitext(filename)[0] + ".png")
+        mask_path = os.path.join(config.output_dir, os.path.splitext(filename)[0] + ".png")
         torchvision.utils.save_image(
             mask,
             mask_path,
@@ -174,17 +174,17 @@ def main(config):
             normalize=True,
         )
 
-        # clean up images
+        # clean up
         gc.collect()
         torch.cuda.empty_cache()
 
 
 if __name__ == "__main__":
     parser = argparse.ArgumentParser()
-    parser.add_argument('--checkpoint_path', type=str, default="./checkpoints/detection/FT_Epoch_latest.pt", help='Checkpoint Path')
-    parser.add_argument("--device_ids", type=str, default=0, help='Default gpu_id=0, cpu_id=-1, multiple gpus=\"2,3\"')
-    parser.add_argument("--input_image_dir", type=str)
-    parser.add_argument("--output_mask_dir", type=str)
+    parser.add_argument('--checkpoint_name', type=str, default="./checkpoints/detection/FT_Epoch_latest.pt", help='Checkpoint Path')
+    parser.add_argument("--GPU", type=str, default=0, help='Default gpu_id=0, cpu_id=-1, multiple gpus=\"2,3\"')
+    parser.add_argument("--test_path", type=str)
+    parser.add_argument("--output_dir", type=str)
     parser.add_argument("--input_size", type=str, default="scale_256", help="resize_256|full_size|scale_256")
     config = parser.parse_args()
     main(config)

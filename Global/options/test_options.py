@@ -40,6 +40,10 @@ class TestOptions(BaseOptions):
         self.parser.add_argument("--test_mask", type=str, default="", help="A directory or a root of bigfile")
         self.parser.add_argument("--test_gt", type=str, default="", help="A directory or a root of bigfile")
 
+        self.parser.add_argument("--test_vae_a", type=str, default="", help="Path to VAE checkpoint A; Overrides 'use_vae_which_epoch' and 'load_pretrainA'.")
+        self.parser.add_argument("--test_vae_b", type=str, default="", help="Path to VAE checkpoint B; Overrides 'use_vae_which_epoch' and 'load_pretrainB'.")
+        self.parser.add_argument("--test_mapping_net", type=str, default="", help="Path to mapping net checkpoint; Overrides 'which_epoch'.")
+
         self.parser.add_argument("--scale_input", action="store_true", help="While testing, choose to scale the input firstly")
 
         self.parser.add_argument("--save_feature_name", type=str, default="features.json", help="The name of saved features")

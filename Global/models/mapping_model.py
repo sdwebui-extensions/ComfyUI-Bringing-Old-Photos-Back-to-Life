@@ -8,7 +8,12 @@ import torch.nn.functional as F
 import os
 import functools
 from torch.autograd import Variable
-from util.image_pool import ImagePool
+
+try:
+    from ..util.image_pool import ImagePool
+except ImportError:
+    from util.image_pool import ImagePool
+
 from .base_model import BaseModel
 from . import networks
 import math
@@ -130,12 +135,11 @@ class Pix2PixHDModel_Mapping(BaseModel):
         self.mapping_net.apply(networks.weights_init)
 
         if opt.load_pretrain != "":
-            self.load_network(self.mapping_net, "mapping_net", opt.which_epoch, opt.load_pretrain)
+            self.load_network(self.mapping_net, "mapping_net", opt.which_epoch, opt.load_pretrain, test_path=opt.test_mapping_net)
 
         if not opt.no_load_VAE:
-
-            self.load_network(self.netG_A, "G", opt.use_vae_which_epoch, opt.load_pretrainA)
-            self.load_network(self.netG_B, "G", opt.use_vae_which_epoch, opt.load_pretrainB)
+            self.load_network(self.netG_A, "G", opt.use_vae_which_epoch, opt.load_pretrainA, test_path=opt.test_vae_a)
+            self.load_network(self.netG_B, "G", opt.use_vae_which_epoch, opt.load_pretrainB, test_path=opt.test_vae_b)
             for param in self.netG_A.parameters():
                 param.requires_grad = False
             for param in self.netG_B.parameters():
@@ -147,9 +151,9 @@ class Pix2PixHDModel_Mapping(BaseModel):
             self.netG_A.cuda(opt.gpu_ids[0])
             self.netG_B.cuda(opt.gpu_ids[0])
             self.mapping_net.cuda(opt.gpu_ids[0])
-        
+
         if not self.isTrain:
-            self.load_network(self.mapping_net, "mapping_net", opt.which_epoch)
+            self.load_network(self.mapping_net, "mapping_net", opt.which_epoch, test_path=opt.test_mapping_net)
 
         # Discriminator network
         if self.isTrain:

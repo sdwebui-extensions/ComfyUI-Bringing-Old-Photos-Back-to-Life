@@ -15,7 +15,6 @@ def run_cmd(command):
         sys.exit(1)
 
 if __name__ == "__main__":
-
     parser = argparse.ArgumentParser()
     parser.add_argument("--input_folder", type=str, default="./test_images/old", help="Test images")
     parser.add_argument("--output_folder", type=str, default="./output", help="Restored images, please use the absolute path")
@@ -47,8 +46,8 @@ if __name__ == "__main__":
         stage_1_command = (
             "python test.py" 
             + " --test_mode " + "Full" 
-            + " --Quality_restore " + 
-            " --test_input " + stage_1_input_dir 
+            + " --Quality_restore " 
+            + " --test_input " + stage_1_input_dir 
             + " --outputs_dir " + stage_1_output_dir 
             + " --gpu_ids " + gpu1 
         )
@@ -123,7 +122,7 @@ if __name__ == "__main__":
         os.makedirs(stage_3_output_dir)
 
     if opts.HR:
-        opts.checkpoint_name='FaceSR_512'
+        opts.checkpoint_name = 'FaceSR_512'
         opts.load_size = 512
         opts.batch_size = 1
     else:

@@ -3,8 +3,12 @@
 
 import argparse
 import os
-from util import util
 import torch
+
+try:
+    from ..util import util
+except ImportError:
+    import util.util as util
 
 
 class BaseOptions:
