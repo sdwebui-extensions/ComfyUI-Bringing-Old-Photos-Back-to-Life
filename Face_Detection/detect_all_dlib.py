@@ -39,7 +39,6 @@ def get_landmark(face_landmarks, id):
 
 
 def search(face_landmarks):
-
     x1, y1 = get_landmark(face_landmarks, 36)
     x2, y2 = get_landmark(face_landmarks, 39)
     x3, y3 = get_landmark(face_landmarks, 42)
@@ -117,7 +116,7 @@ def affine2theta(affine, input_w, input_h, target_w, target_h):
     return theta
 
 
-def get_aligned_faces(face_detector, landmark_locator, image: Image.Image, side_length: int):
+def get_aligned_faces(face_detector, landmark_locator, image: Image.Image, side_length: int) -> np.ndarray:
     # extract faces
     image = np.array(image)
     faces = face_detector(image)
@@ -136,7 +135,7 @@ def get_aligned_faces(face_detector, landmark_locator, image: Image.Image, side_
     return aligned_faces
 
 
-def main(checkpoint_path: str, image_dir: str, output_dir: str, side_length: int):
+def main(checkpoint_path: str, image_dir: str, output_dir: str, face_size: int):
     # make directories
     os.makedirs(image_dir, exist_ok=True)
     os.makedirs(output_dir, exist_ok=True)
@@ -151,13 +150,13 @@ def main(checkpoint_path: str, image_dir: str, output_dir: str, side_length: int
         image = Image.open(image_path).convert("RGB")
 
         # get aligned faces
-        aligned_faces = get_aligned_faces(face_detector, landmark_locator, image, side_length)
+        aligned_faces = get_aligned_faces(face_detector, landmark_locator, image, face_size)
         print(str(len(aligned_faces)) + " faces in " + x)
 
         # save faces
         for face_id, aligned_face in enumerate(aligned_faces):
-            img_name = os.path.splitext(x)[0] + "_" + str(face_id + 1)
-            io.imsave(os.path.join(output_dir, img_name + ".png"), img_as_ubyte(aligned_face))
+            image_name = os.path.splitext(x)[0] + "_" + str(face_id + 1)
+            io.imsave(os.path.join(output_dir, image_name + ".png"), img_as_ubyte(aligned_face))
 
 
 if __name__ == "__main__":
@@ -165,7 +164,7 @@ if __name__ == "__main__":
     parser.add_argument("--model_url", type=str, default="shape_predictor_68_face_landmarks.dat", help="shape predictor")
     parser.add_argument("--url", type=str, default="/home/jingliao/ziyuwan/celebrities", help="input")
     parser.add_argument("--save_url", type=str, default="/home/jingliao/ziyuwan/celebrities_detected_face_reid", help="output")
-    parser.add_argument("--side_length", type=int, default=256, help="default is 256, HR is 512")
+    parser.add_argument("--face_size", type=int, default=256, help="default=256, HR=512")
     opts = parser.parse_args()
 
-    main(opts.model_url, opts.url, opts.save_url, opts.side_length)
+    main(opts.model_url, opts.url, opts.save_url, opts.face_size)

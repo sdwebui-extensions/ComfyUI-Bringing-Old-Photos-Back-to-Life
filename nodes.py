@@ -1,6 +1,7 @@
 import os
 import gc
 import glob
+import warnings
 
 import torch
 import torchvision
@@ -9,12 +10,23 @@ from PIL import Image
 from .Global import detection as ScratchDetector
 from .Global import test as Restorer
 from .Global.options.test_options import TestOptions
+try:
+    from .Face_Detection import detect_all_dlib as FaceDetector
+except Exception as error:
+    warnings.warn("BOPBTL: Unable to import Face_Detection. You may need to install Dlib with 'pip install dlib'.")
 
 try: # TODO: remove after debugging
     import comfy.model_management
     import folder_paths
-except:
-    pass
+except Exception as error:
+    print("An exception occurred:", error)
+
+def search_custom_model_dir(dir, ext): # The issue with this is that it is hardcoded
+    models = []
+    if os.path.isdir(dir):
+        models = glob.glob(dir + os.sep + "**" + os.sep + "*" + ext, recursive=True)
+        models = [path[len(dir):] for path in models]
+    return models
 
 class LoadScratchMaskModel:
     RETURN_TYPES = ("SCRATCH_MODEL",)
@@ -28,18 +40,10 @@ class LoadScratchMaskModel:
         pass
 
     @classmethod
-    def get_scratch_model_list(self):
-        models = []
-        if os.path.isdir(self.SCRATCH_MODELS_PATH):
-            models = glob.glob(self.SCRATCH_MODELS_PATH + os.sep + "**" + os.sep + "*.pt", recursive=True)
-            models = [path[len(self.SCRATCH_MODELS_PATH):] for path in models]
-        return models
-
-    @classmethod
     def INPUT_TYPES(self):
         return {
             "required": {
-                "scratch_model": (self.get_scratch_model_list(),),
+                "scratch_model": (search_custom_model_dir(self.SCRATCH_MODELS_PATH, ".pt"),),
             },
         }
 
@@ -207,7 +211,6 @@ class RestoreOldPhotos:
     ):
         (opt, model, image_transform, mask_transform) = bopbtl_models
 
-        print(image.size())
         image = image.permute(0, 3, 1, 2)
         restored_images = []
         for i in range(image.size()[0]):
@@ -235,11 +238,79 @@ class RestoreOldPhotos:
         restored_images = restored_images.permute(0, 2, 3, 1)
         return (restored_images,)
 
+class LoadFaceDetector:
+    RETURN_TYPES = ("DLIB_MODEL",)
+    RETURN_NAMES = ("dlib_model",)
+    FUNCTION = "load_model"
+    OUTPUT_NODE = True
+
+    def __init__(self):
+        pass
+
+    FACE_MODEL_PATH = "." + os.sep + "models" + os.sep + "facedetection" + os.sep
+
+    @classmethod
+    def INPUT_TYPES(self):
+        return {
+            "required": {
+                "shape_predictor_68_face_landmarks": (search_custom_model_dir(self.FACE_MODEL_PATH, ".dat"),),
+            },
+        }
+
+    def load_model(self, shape_predictor_68_face_landmarks: str):
+        model_path = self.FACE_MODEL_PATH + shape_predictor_68_face_landmarks
+        face_detector = FaceDetector.dlib.get_frontal_face_detector()
+        landmark_locator = FaceDetector.dlib.shape_predictor(model_path)
+        return ((face_detector, landmark_locator),)
+
+class DetectFaces:
+    RETURN_TYPES = ("FACE", "IMAGE")
+    RETURN_NAMES = ("face", "image")
+    FUNCTION = "detect_faces_batch"
+    OUTPUT_NODE = True
+    CATEGORY = "image"
+
+    def __init__(self):
+        pass
+
+    @classmethod
+    def INPUT_TYPES(self):
+        return {
+            "required": {
+                "dlib_model": ("DLIB_MODEL",),
+                "images": ("IMAGE",),
+                "face_size": (
+                    ["256", "512"], {
+                    "default": "512",
+                }),
+            },
+        }
+
+    def detect_faces_batch(self, dlib_model: tuple, images: torch.Tensor, face_size: str):
+        (face_detector, landmark_locator) = dlib_model
+        face_size = int(face_size)
+
+        images = images.permute(0, 3, 1, 2)
+
+        aligned_faces = []
+        out_images = []
+        for image in images:
+            pil_image = torchvision.transforms.ToPILImage()(image).convert("RGB")
+            np_faces = FaceDetector.get_aligned_faces(face_detector, landmark_locator, pil_image, face_size)
+            faces = [torch.from_numpy(np_face) for np_face in np_faces]
+            aligned_faces.append(torch.stack(faces))
+            out_images += faces
+        out_images = torch.stack(out_images)
+
+        return (aligned_faces, out_images)
+
 NODE_CLASS_MAPPINGS = {
     "BOPBTL_ScratchMask": ScratchMask,
     "BOPBTL_LoadScratchMaskModel": LoadScratchMaskModel,
     "BOPBTL_LoadRestoreOldPhotosModel": LoadRestoreOldPhotosModel,
     "BOPBTL_RestoreOldPhotos": RestoreOldPhotos,
+    "BOPBTL_LoadFaceDetector": LoadFaceDetector,
+    "BOPBTL_DetectFaces": DetectFaces,
 }
 
 NODE_DISPLAY_NAME_MAPPINGS = {
@@ -247,4 +318,6 @@ NODE_DISPLAY_NAME_MAPPINGS = {
     "BOPBTL_LoadScratchMaskModel": "Load Scratch Mask Model",
     "BOPBTL_LoadRestoreOldPhotosModel": "Load Restore Old Photos Model",
     "BOPBTL_RestoreOldPhotos": "Restore Old Photos",
+    "BOPBTL_LoadFaceDetector": "Load Face Detector (Dlib)",
+    "BOPBTL_DetectFaces": "Detect Faces (Dlib)",
 }
