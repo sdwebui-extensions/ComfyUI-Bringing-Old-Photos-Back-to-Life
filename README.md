@@ -12,7 +12,7 @@ This repo has to be downloaded and extracted in two separate locations.
 
 TODO: [Can this be simplified somehow? Ideally so it can be added to ComfyUI node manager.]
 
-Bash:
+UNIX Shell:
 
 ```bash
 cd Face_Enhancement/models/networks/
