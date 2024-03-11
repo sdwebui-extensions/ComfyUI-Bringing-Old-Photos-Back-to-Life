@@ -2,11 +2,15 @@
 
 Restore images in ComfyUI. Optionally use automatic scratch removal and face enhancement. Built on [microsoft/Bringing-Old-Photos-Back-to-Life](https://github.com/microsoft/Bringing-Old-Photos-Back-to-Life).
 
-TODO: teaser
+TODO: [Add Teaser]
 
-## 1. Installation Requirements
+## 1. Requirements
 
-### Detection Models
+### Synchronized BatchNorm Models
+
+This repo has to be downloaded and extracted in two separate locations.
+
+TODO: [Can this be simplified somehow?]
 
 Bash:
 
@@ -38,17 +42,15 @@ Copy-Item -Path "Synchronized-BatchNorm-PyTorch/sync_batchnorm" -Destination . -
 
 ### Dlib
 
-Dlib is required for Stages 2-4 for face detection.
+Dlib is only required for Stages 2-4 for face detection, so it is optional.
 
-Make sure to install dlib to your python.
+Make sure to install dlib to the python and/or environment you use for ComfyUI.
 
 ```python
-pip install dlib
+pip install dlib==19.24.1
 ```
 
 ## 2. Models
-
-Download the models.
 
 ### Load Restore Old Photos (Stage 1)
 
@@ -62,14 +64,14 @@ Place in `models/vae/`.
 
 #### vae_b models
 
-Place in `models/vae/`.
+Extract the following models and place them inside `models/vae/`.
 
 - VAE_B_quality/latest_net_G.pth
 - VAE_B_scratch/latest_net_G.pth (scratch detection)
 
 #### mapping_net models
 
-Place in `models/checkpoints/`.
+Extract the following models and place them inside `models/checkpoints/`.
 
 - mapping_quality/latest_net_mapping_net.pth
 - mapping_scratch/latest_net_mapping_net.pth (scratch detection)
@@ -79,7 +81,7 @@ Place in `models/checkpoints/`.
 
 [Download - shape_predictor_68_face_landmarks.dat](http://dlib.net/files/shape_predictor_68_face_landmarks.dat.bz2)
 
-Place in `models/facedetection/` (custom directory).
+Extract the following models and place them inside `models/facedetection/` (custom directory).
 
 - shape_predictor_68_face_landmarks.dat
 
@@ -87,32 +89,32 @@ Place in `models/facedetection/` (custom directory).
 
 [Download - Face Enhancement Models](https://facevc.blob.core.windows.net/zhanbo/old_photo/pretrain/Face_Enhancement/checkpoints.zip)
 
-Place in `models/checkpoints/`.
+Extract the following models and place them inside `models/checkpoints/`.
 
 - Setting_9_epoch_100/latest_net_G.pth (256)
 - FaceSR_512/latest_net_G.pth (512)
 
 ## 3. Workflows
 
-### Simple Workflow
+TODO: [Finalize node interfaces.]
 
-TODO:
+### BOPBTL and Face Restoration
 
-### Simple Workflow with Scratch Detection
+TODO: [Add workflow image.]
 
-TODO:
+### BOPBTL + Scratch Detection and Face Restoration
 
-### Stage 1 with Scratch Detection
+TODO: [Add workflow image.]
 
-TODO:
+### BOPBTL + Scratch Detection (Stage 1)
 
-### Stage 2-4 Advanced
+TODO: [Add workflow image.]
 
-TODO:
+### Face Restoration (Advanced) (Stages 2-4)
+
+TODO: [Add workflow image.]
 
 ## Citation
-
-If you find this work useful for your research, please consider citing the following papers.
 
 ```bibtex
 @inproceedings{wan2020bringing,
@@ -132,8 +134,6 @@ year={2020}
   year={2020}
 }
 ```
-
-If you are also interested in the legacy photo/video colorization, please refer to [this work](https://github.com/zhangmozhe/video-colorization).
 
 ## License
 
