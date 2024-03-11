@@ -27,7 +27,7 @@ from .Face_Enhancement.data.face_dataset import FaceTensorDataset
 import comfy.model_management
 import folder_paths
 
-def search_custom_model_dir(dir:str , ext: str): # The issue with this is that it is hardcoded
+def search_custom_model_dir(dir:str , ext: str): # The issue with this is that it is hardcoded; but .dat files are not recognized by ComfyUI
     models = []
     if os.path.isdir(dir):
         models = glob.glob(dir + os.sep + "**" + os.sep + "*" + ext, recursive=True)
@@ -77,7 +77,9 @@ class LoadScratchMaskModel:
         return (model,)
 
     def run(self, scratch_model: str):
-        model_path = folder_paths.get_full_path("checkpoints", scratch_model), 
+        model_path = folder_paths.get_full_path("checkpoints", scratch_model)
+        if isinstance(model_path, tuple):
+            model_path = model_path[0]
         return LoadScratchMaskModel.load_model(model_path)
 
 class ScratchMask:
@@ -153,7 +155,7 @@ class LoadRestoreOldPhotosModel:
         return {
             "required": {
                 "device_ids": ("STRING", {"default": "0"}), # TODO: can this be automated away?
-                "use_scratch_detection": ( # TODO: is this needed this early?
+                "scratch_detection": (
                     ["True", "False"], {
                     "default": "False",
                 }),
@@ -170,7 +172,7 @@ class LoadRestoreOldPhotosModel:
     @staticmethod
     def load_models(
         device_id_list, 
-        use_scratch_detection: bool, 
+        scratch_detection: bool, 
         mapping_patch_attention: bool, 
         mapping_net_path: str, 
         vae_b_path: str, 
@@ -182,8 +184,8 @@ class LoadRestoreOldPhotosModel:
         opt.isTrain = False
         opt.test_mode = "Full"
 
-        opt.Quality_restore = not use_scratch_detection
-        opt.Scratch_and_Quality_restore = use_scratch_detection
+        opt.Quality_restore = not scratch_detection
+        opt.Scratch_and_Quality_restore = scratch_detection
 
         opt.test_vae_a = vae_a_path
         opt.test_vae_b = vae_b_path
@@ -209,7 +211,7 @@ class LoadRestoreOldPhotosModel:
     def run(
         self, 
         device_ids: str, 
-        use_scratch_detection: str, 
+        scratch_detection: str, 
         mapping_patch_attention: str, 
         mapping_net, 
         vae_b, 
@@ -217,7 +219,7 @@ class LoadRestoreOldPhotosModel:
     ):
         return LoadRestoreOldPhotosModel.load_models(
             [int(n) for n in device_ids.split(",")], 
-            True if use_scratch_detection == "True" else False, 
+            True if scratch_detection == "True" else False, 
             True if mapping_patch_attention == "True" else False, 
             folder_paths.get_full_path("checkpoints", mapping_net), 
             folder_paths.get_full_path("vae", vae_b), 
@@ -624,11 +626,15 @@ class DetectRestoreBlendFaces:
             },
         }
 
-    def run(self, image: torch.Tensor, dlib_model, face_enhance_model):
+    @staticmethod
+    def enhance_faces(image: torch.Tensor, dlib_model, face_enhance_model):
         _, load_size = face_enhance_model
         face_count, cropped_faces, face_landmarks = DetectFaces.detect_faces_batch(dlib_model, image, load_size)
         _, enhanced_faces = EnhanceFaces.enhance_faces(face_enhance_model, face_count, cropped_faces)
         return BlendFaces.blend_faces(image, face_count, enhanced_faces, face_landmarks)
+
+    def run(self, image, dlib_model, face_enhance_model):
+        return DetectRestoreBlendFaces.enhance_faces(image, dlib_model, face_enhance_model)
 
 NODE_CLASS_MAPPINGS = {
     "BOPBTL_ScratchMask": ScratchMask,

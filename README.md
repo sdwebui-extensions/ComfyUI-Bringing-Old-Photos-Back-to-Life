@@ -1,4 +1,4 @@
-# comfy-bringing-old-photos-back-to-life
+# ComfyUI-Bringing-Old-Photos-Back-to-Life
 
 Enhance images in [ComfyUI](https://github.com/comfyanonymous/ComfyUI). Optional features include automatic scratch removal and face enhancement.
 
@@ -71,15 +71,15 @@ Place in `models/vae/`.
 Extract the following models and place them inside `models/vae/`.
 
 - VAE_B_quality/latest_net_G.pth
-- VAE_B_scratch/latest_net_G.pth (scratch detection)
+- VAE_B_scratch/latest_net_G.pth (scratch_detection)
 
 ##### mapping_net
 
 Extract the following models and place them inside `models/checkpoints/`.
 
 - mapping_quality/latest_net_mapping_net.pth
-- mapping_scratch/latest_net_mapping_net.pth (scratch detection)
-- mapping_Patch_Attention/latest_net_mapping_net.pth (mapping patch attention)
+- mapping_scratch/latest_net_mapping_net.pth (scratch_detection)
+- mapping_Patch_Attention/latest_net_mapping_net.pth (mapping_patch_attention)
 
 #### Load Scratch Mask Model
 
@@ -97,6 +97,8 @@ Extract the following models and place them inside `models/checkpoints/`.
 
 Extract the following models and place them inside `models/facedetection/` (custom directory).
 
+##### shape_predictor_68_face_landmarks
+
 - shape_predictor_68_face_landmarks.dat
 
 #### Load Face Enhancer Model
@@ -104,6 +106,8 @@ Extract the following models and place them inside `models/facedetection/` (cust
 [Download - Face Enhancement Models](https://facevc.blob.core.windows.net/zhanbo/old_photo/pretrain/Face_Enhancement/checkpoints.zip)
 
 Extract the following models and place them inside `models/checkpoints/`.
+
+##### face_enhance_model
 
 - Setting_9_epoch_100/latest_net_G.pth (256)
 - FaceSR_512/latest_net_G.pth (512)
