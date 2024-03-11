@@ -149,15 +149,12 @@ if __name__ == "__main__":
     stage_4_output_dir = os.path.join(opts.output_folder, "final_output")
     if not os.path.exists(stage_4_output_dir):
         os.makedirs(stage_4_output_dir)
-    if opts.HR:
-        warp_script = "align_warp_back_multiple_dlib_HR.py"
-    else:
-        warp_script = "align_warp_back_multiple_dlib.py"
     stage_4_command = (
-        "python " + warp_script 
+        "python align_warp_back_multiple_dlib.py"
         + " --origin_url " + stage_4_input_image_dir 
         + " --replace_url " + stage_4_input_face_dir 
         + " --save_url " + stage_4_output_dir 
+        + " --face_size " + ("512" if opts.HR else "256")
     )
     run_cmd(stage_4_command)
     print("Finish Stage 4 ...")

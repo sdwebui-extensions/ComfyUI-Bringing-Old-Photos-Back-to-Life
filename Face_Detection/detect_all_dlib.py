@@ -116,7 +116,34 @@ def affine2theta(affine, input_w, input_h, target_w, target_h):
     return theta
 
 
-def get_aligned_faces(face_detector, landmark_locator, image: Image.Image, side_length: int) -> np.ndarray:
+def get_face_landmarks(face_detector, landmark_locator, image: np.ndarray):
+    faces = face_detector(image)
+    face_landmarks = []
+    for face in faces:
+        face_landmarks.append(search(landmark_locator(image, face)))
+    return face_landmarks # memory usage okay?
+
+
+def get_aligned_faces(faces_landmarks, image: np.ndarray, side_length: int) -> np.ndarray:
+    aligned_faces = []
+    for face_landmarks in faces_landmarks:
+        affine = compute_transformation_matrix(
+            image, 
+            face_landmarks, 
+            False, 
+            float(side_length), 
+            target_face_scale=1.3, 
+        )
+        aligned_face = warp(
+            image, 
+            affine, 
+            output_shape=(side_length, side_length, 3), 
+        )
+        aligned_faces.append(aligned_face)
+    return aligned_faces
+
+
+def get_aligned_faces_v1(face_detector, landmark_locator, image: Image.Image, side_length: int) -> np.ndarray:
     # extract faces
     image = np.array(image)
     faces = face_detector(image)
@@ -128,8 +155,18 @@ def get_aligned_faces(face_detector, landmark_locator, image: Image.Image, side_
         current_fl = search(face_landmarks)
 
         # align face
-        affine = compute_transformation_matrix(image, current_fl, False, float(side_length), target_face_scale=1.3)
-        aligned_face = warp(image, affine, output_shape=(side_length, side_length, 3))
+        affine = compute_transformation_matrix(
+            image, 
+            current_fl, 
+            False, 
+            float(side_length), 
+            target_face_scale=1.3, 
+        )
+        aligned_face = warp(
+            image, 
+            affine, 
+            output_shape=(side_length, side_length, 3), 
+        )
         aligned_faces.append(aligned_face)
 
     return aligned_faces
@@ -148,9 +185,11 @@ def main(checkpoint_path: str, image_dir: str, output_dir: str, face_size: int):
         # load image
         image_path = os.path.join(image_dir, x)
         image = Image.open(image_path).convert("RGB")
+        image = np.array(image)
 
         # get aligned faces
-        aligned_faces = get_aligned_faces(face_detector, landmark_locator, image, face_size)
+        landmarks = get_face_landmarks(face_detector, landmark_locator, image)
+        aligned_faces = get_aligned_faces(landmarks,  image, face_size)
         print(str(len(aligned_faces)) + " faces in " + x)
 
         # save faces

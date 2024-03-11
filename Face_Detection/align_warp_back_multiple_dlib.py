@@ -14,11 +14,9 @@ from PIL import Image, ImageFilter
 import torch.nn.functional as F
 import torchvision as tv
 import torchvision.utils as vutils
-import time
 import cv2
 import os
 from skimage import img_as_ubyte
-import json
 import argparse
 import dlib
 
@@ -124,10 +122,9 @@ def _origin_face_pts():
     return np.reshape(pts, (5, 2))
 
 
-def compute_transformation_matrix(img, landmark, normalize, target_face_scale=1.0):
-
+def compute_transformation_matrix(img, landmark, normalize, side_length, target_face_scale=1.0):
     std_pts = _standard_face_pts()  # [-1,1]
-    target_pts = (std_pts * target_face_scale + 1) / 2 * 256.0
+    target_pts = (std_pts * target_face_scale + 1) / 2 * side_length
 
     # print(target_pts)
 
@@ -145,10 +142,9 @@ def compute_transformation_matrix(img, landmark, normalize, target_face_scale=1.
     return affine
 
 
-def compute_inverse_transformation_matrix(img, landmark, normalize, target_face_scale=1.0):
-
+def compute_inverse_transformation_matrix(img, landmark, normalize, side_length, target_face_scale=1.0):
     std_pts = _standard_face_pts()  # [-1,1]
-    target_pts = (std_pts * target_face_scale + 1) / 2 * 256.0
+    target_pts = (std_pts * target_face_scale + 1) / 2 * side_length
 
     # print(target_pts)
 
@@ -196,7 +192,6 @@ def affine2theta(affine, input_w, input_h, target_w, target_h):
 
 
 def blur_blending(im1, im2, mask):
-
     mask *= 255.0
 
     kernel = np.ones((10, 10), np.uint8)
@@ -215,7 +210,7 @@ def blur_blending(im1, im2, mask):
 
 
 def blur_blending_cv2(im1, im2, mask):
-
+    mask = mask.astype(im1.dtype)
     mask *= 255.0
 
     kernel = np.ones((9, 9), np.uint8)
@@ -344,79 +339,67 @@ def search(face_landmarks):
     return results
 
 
-if __name__ == "__main__":
+def blend_faces(images, face_counts, enhanced_faces, faces_landmarks, face_size: int):
+    outputs = []
+    face_sum = 0
+    for image, face_count in zip(images, face_counts):
+        origin_height, origin_width, _ = image.shape
 
-    parser = argparse.ArgumentParser()
-    parser.add_argument("--origin_url", type=str, default="./", help="origin images")
-    parser.add_argument("--replace_url", type=str, default="./", help="restored faces")
-    parser.add_argument("--save_url", type=str, default="./save")
-    opts = parser.parse_args()
+        # extract faces
+        image = np.array(image)
 
-    origin_url = opts.origin_url
-    replace_url = opts.replace_url
-    save_url = opts.save_url
-
-    if not os.path.exists(save_url):
-        os.makedirs(save_url)
-
-    face_detector = dlib.get_frontal_face_detector()
-    landmark_locator = dlib.shape_predictor("shape_predictor_68_face_landmarks.dat")
-
-    count = 0
-
-    for x in os.listdir(origin_url):
-        img_url = os.path.join(origin_url, x)
-        pil_img = Image.open(img_url).convert("RGB")
-
-        origin_width, origin_height = pil_img.size
-        image = np.array(pil_img)
-
-        start = time.time()
-        faces = face_detector(image)
-        done = time.time()
-
-        if len(faces) == 0:
-            print("Warning: There is no face in %s" % (x))
+        if face_count == 0:
+            outputs.append(image)
             continue
 
+        # blend faces
         blended = image
-        for face_id in range(len(faces)):
-
-            current_face = faces[face_id]
-            face_landmarks = landmark_locator(image, current_face)
-            current_fl = search(face_landmarks)
-
-            forward_mask = np.ones_like(image).astype("uint8")
-            affine = compute_transformation_matrix(image, current_fl, False, target_face_scale=1.3)
-            aligned_face = warp(image, affine, output_shape=(256, 256, 3), preserve_range=True)
-            forward_mask = warp(
-                forward_mask, affine, output_shape=(256, 256, 3), order=0, preserve_range=True
+        for enhanced_face, current_fl in zip(
+            enhanced_faces[face_sum : face_sum + face_count], 
+            faces_landmarks[face_sum : face_sum + face_count]
+        ):
+            # get affine transformation
+            affine = compute_transformation_matrix(
+                image, 
+                current_fl, 
+                False, 
+                float(face_size), 
+                target_face_scale=1.3, 
             )
 
-            affine_inverse = affine.inverse
-            cur_face = aligned_face
-            if replace_url != "":
+            # forward mask
+            forward_mask = np.ones_like(image).astype("uint8")
+            forward_mask = warp(
+                forward_mask, 
+                affine, 
+                output_shape=(face_size, face_size, 3), 
+                order=0, 
+                preserve_range=True, 
+            )
 
-                face_name = x[:-4] + "_" + str(face_id + 1) + ".png"
-                cur_url = os.path.join(replace_url, face_name)
-                restored_face = Image.open(cur_url).convert("RGB")
-                restored_face = np.array(restored_face)
-                cur_face = restored_face
+            # align face
+            aligned_face = warp(
+                image, 
+                affine, 
+                output_shape=(face_size, face_size, 3), 
+                preserve_range=True, 
+            )
 
-            ## Histogram Color matching
+            # convert colorspace
             A = cv2.cvtColor(aligned_face.astype("uint8"), cv2.COLOR_RGB2BGR)
-            B = cv2.cvtColor(cur_face.astype("uint8"), cv2.COLOR_RGB2BGR)
-            B = match_histograms(B, A)
-            cur_face = cv2.cvtColor(B.astype("uint8"), cv2.COLOR_BGR2RGB)
+            B = cv2.cvtColor(enhanced_face.astype("uint8"), cv2.COLOR_RGB2BGR)
+            B = match_histograms(B, A)  ## histogram color matching
+            enhanced_face = cv2.cvtColor(B.astype("uint8"), cv2.COLOR_BGR2RGB)
 
+            # blend face with mask
+            affine_inverse = affine.inverse
             warped_back = warp(
-                cur_face,
+                enhanced_face,
                 affine_inverse,
                 output_shape=(origin_height, origin_width, 3),
                 order=3,
                 preserve_range=True,
             )
-
             backward_mask = warp(
                 forward_mask,
                 affine_inverse,
@@ -424,14 +407,117 @@ if __name__ == "__main__":
                 order=0,
                 preserve_range=True,
             )  ## Nearest neighbour
-
             blended = blur_blending_cv2(warped_back, blended, backward_mask)
             blended *= 255.0
+        blended = blended / 255.0
+        outputs.append(blended)
 
-        io.imsave(os.path.join(save_url, x), img_as_ubyte(blended / 255.0))
+        face_sum += face_count
 
-        count += 1
+    return outputs
 
-        if count % 1000 == 0:
-            print("%d have finished ..." % (count))
+def main(checkpoint_path: str, origin_url: str, replace_url: str, save_url: str, face_size: int):
+    # make directories
+    if not os.path.exists(save_url):
+        os.makedirs(save_url)
+
+    # load models
+    face_detector = dlib.get_frontal_face_detector()
+    landmark_locator = dlib.shape_predictor(checkpoint_path)
+
+    for x in os.listdir(origin_url):
+        # load image
+        img_url = os.path.join(origin_url, x)
+        pil_img = Image.open(img_url).convert("RGB")
+        origin_width, origin_height = pil_img.size
+
+        # extract faces
+        image = np.array(pil_img)
+        faces = face_detector(image)
+
+        print(str(len(faces)) + " faces in " + x)
+        if len(faces) == 0:
+            continue
+
+        # blend faces
+        blended = image
+        for face_id, current_face in enumerate(faces):
+            # get face landmarks
+            face_landmarks = landmark_locator(image, current_face)
+            current_fl = search(face_landmarks)
+
+            # get affine transformation
+            affine = compute_transformation_matrix(
+                image, 
+                current_fl, 
+                False, 
+                float(face_size), 
+                target_face_scale=1.3, 
+            )
+
+            # forward mask
+            forward_mask = np.ones_like(image).astype("uint8")
+            forward_mask = warp(
+                forward_mask, 
+                affine, 
+                output_shape=(face_size, face_size, 3), 
+                order=0, 
+                preserve_range=True, 
+            )
+
+            # align face
+            aligned_face = warp(
+                image, 
+                affine, 
+                output_shape=(face_size, face_size, 3), 
+                preserve_range=True, 
+            )
+
+            # load enhanced face
+            enhanced_face = aligned_face
+            if replace_url != "":
+                face_name = os.path.splitext(x)[0] + "_" + str(face_id + 1) + ".png"
+                cur_url = os.path.join(replace_url, face_name)
+                enhanced_face = Image.open(cur_url).convert("RGB")
+                enhanced_face = np.array(enhanced_face)
+
+            # convert colorspace
+            A = cv2.cvtColor(aligned_face.astype("uint8"), cv2.COLOR_RGB2BGR)
+            B = cv2.cvtColor(enhanced_face.astype("uint8"), cv2.COLOR_RGB2BGR)
+            B = match_histograms(B, A)  ## histogram color matching
+            enhanced_face = cv2.cvtColor(B.astype("uint8"), cv2.COLOR_BGR2RGB)
+
+            # blend face with mask
+            affine_inverse = affine.inverse
+            warped_back = warp(
+                enhanced_face,
+                affine_inverse,
+                output_shape=(origin_height, origin_width, 3),
+                order=3,
+                preserve_range=True,
+            )
+            backward_mask = warp(
+                forward_mask,
+                affine_inverse,
+                output_shape=(origin_height, origin_width, 3),
+                order=0,
+                preserve_range=True,
+            )  ## Nearest neighbour
+            blended = blur_blending_cv2(warped_back, blended, backward_mask)
+            blended *= 255.0
+        blended / 255.0
+
+        io.imsave(os.path.join(save_url, x), img_as_ubyte(blended))
+
+
+if __name__ == "__main__":
+    parser = argparse.ArgumentParser()
+    parser.add_argument("--model_url", type=str, default="shape_predictor_68_face_landmarks.dat", help="shape predictor")
+    parser.add_argument("--origin_url", type=str, default="./", help="origin images")
+    parser.add_argument("--replace_url", type=str, default="./", help="restored faces")
+    parser.add_argument("--save_url", type=str, default="./save")
+    parser.add_argument("--face_size", type=int, default=256, help="default=256, HR=512")
+    opts = parser.parse_args()
+
+    main(opts.model_url, opts.origin_url, opts.replace_url, opts.save_url, opts.face_size)
 
