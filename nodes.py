@@ -57,8 +57,6 @@ class LoadScratchMaskModel:
     FUNCTION = "run"
     OUTPUT_NODE = True
 
-    SCRATCH_MODELS_PATH = "." + os.sep + "models" + os.sep + "scratch_models" + os.sep
-
     def __init__(self):
         pass
 
@@ -66,7 +64,7 @@ class LoadScratchMaskModel:
     def INPUT_TYPES(self):
         return {
             "required": {
-                "scratch_model": (search_custom_model_dir(self.SCRATCH_MODELS_PATH, ".pt"),),
+                "scratch_model": (folder_paths.get_filename_list("checkpoints"),),
             },
         }
 
@@ -79,7 +77,7 @@ class LoadScratchMaskModel:
         return (model,)
 
     def run(self, scratch_model: str):
-        model_path = self.SCRATCH_MODELS_PATH + scratch_model
+        model_path = folder_paths.get_full_path("checkpoints", scratch_model), 
         return LoadScratchMaskModel.load_model(model_path)
 
 class ScratchMask:
@@ -283,7 +281,7 @@ class RestoreOldPhotos:
     def run(self, image, bopbtl_models, scratch_mask = None):
         return RestoreOldPhotos.restore(image, bopbtl_models, scratch_mask)
 
-class LoadFaceDetector:
+class LoadFaceDetectorModel:
     RETURN_TYPES = ("DLIB_MODEL",)
     RETURN_NAMES = ("dlib_model",)
     FUNCTION = "run"
@@ -310,7 +308,7 @@ class LoadFaceDetector:
 
     def run(self, shape_predictor_68_face_landmarks: str):
         model_path = self.FACE_MODEL_PATH + shape_predictor_68_face_landmarks
-        return LoadFaceDetector.load_model(model_path)
+        return LoadFaceDetectorModel.load_model(model_path)
 
 class DetectFaces:
     RETURN_TYPES = ("FACE_COUNT", "IMAGE", "FACE_LANDMARKS")
@@ -363,7 +361,7 @@ class DetectFaces:
     def run(self, dlib_model, images, face_size):
         return DetectFaces.detect_faces_batch(dlib_model, images, face_size)
 
-class LoadFaceEnhancer:
+class LoadFaceEnhancerModel:
     RETURN_TYPES = ("FACE_ENHANCE_MODEL",)
     RETURN_NAMES = ("face_enhance_model",)
     FUNCTION = "run"
@@ -404,7 +402,7 @@ class LoadFaceEnhancer:
         return ((model, load_size),)
 
     def run(self, device_ids, face_enhance_model, model_face_size):
-        return LoadFaceEnhancer.load_model(device_ids, face_enhance_model, model_face_size)
+        return LoadFaceEnhancerModel.load_model(device_ids, face_enhance_model, model_face_size)
 
 class EnhanceFaces:
     RETURN_TYPES = ("FACE_COUNT", "IMAGE")
@@ -637,9 +635,9 @@ NODE_CLASS_MAPPINGS = {
     "BOPBTL_LoadScratchMaskModel": LoadScratchMaskModel,
     "BOPBTL_LoadRestoreOldPhotosModel": LoadRestoreOldPhotosModel,
     "BOPBTL_RestoreOldPhotos": RestoreOldPhotos,
-    "BOPBTL_LoadFaceDetector": LoadFaceDetector,
+    "BOPBTL_LoadFaceDetectorModel": LoadFaceDetectorModel,
     "BOPBTL_DetectFaces": DetectFaces,
-    "BOPBTL_LoadFaceEnhancer": LoadFaceEnhancer,
+    "BOPBTL_LoadFaceEnhancerModel": LoadFaceEnhancerModel,
     "BOPBTL_EnhanceFaces": EnhanceFaces,
     "BOPBTL_EnhanceFacesAdvanced": EnhanceFacesAdvanced,
     "BOPBTL_BlendFaces": BlendFaces,
@@ -651,9 +649,9 @@ NODE_DISPLAY_NAME_MAPPINGS = {
     "BOPBTL_LoadScratchMaskModel": "Load Scratch Mask Model",
     "BOPBTL_LoadRestoreOldPhotosModel": "Load Restore Old Photos Model",
     "BOPBTL_RestoreOldPhotos": "Restore Old Photos",
-    "BOPBTL_LoadFaceDetector": "Load Face Detector (Dlib)",
+    "BOPBTL_LoadFaceDetectorModel": "Load Face Detector Model (Dlib)",
     "BOPBTL_DetectFaces": "Detect Faces (Dlib)",
-    "BOPBTL_LoadFaceEnhancer": "Load Face Enhancer",
+    "BOPBTL_LoadFaceEnhancerModel": "Load Face Enhancer Model",
     "BOPBTL_EnhanceFaces": "Enhance Faces",
     "BOPBTL_EnhanceFacesAdvanced": "Enhance Faces (Advanced)",
     "BOPBTL_BlendFaces": "Blend Faces (Dlib)",

@@ -1,8 +1,8 @@
 # comfy-bringing-old-photos-back-to-life
 
-TODO: [Change repo name]
+Enhance images in [ComfyUI](https://github.com/comfyanonymous/ComfyUI). Optional features include automatic scratch removal and face enhancement.
 
-Restore images in ComfyUI. Optionally use automatic scratch removal and face enhancement. Built on [microsoft/Bringing-Old-Photos-Back-to-Life](https://github.com/microsoft/Bringing-Old-Photos-Back-to-Life).
+Forked from [microsoft/Bringing-Old-Photos-Back-to-Life](https://github.com/microsoft/Bringing-Old-Photos-Back-to-Life).
 
 TODO: [Add Teaser]
 
@@ -46,7 +46,7 @@ Copy-Item -Path "Synchronized-BatchNorm-PyTorch/sync_batchnorm" -Destination . -
 
 Dlib is only required for Stages 2-4 for face detection, so it is optional.
 
-Make sure to install dlib to the python and/or environment you use for ComfyUI.
+Make sure to install dlib to the python and virtual environment for ComfyUI.
 
 ```python
 pip install dlib==19.24.1
@@ -54,24 +54,26 @@ pip install dlib==19.24.1
 
 ## 2. Models
 
-### Load Restore Old Photos (Stage 1)
+### BOPBTL Models (Stage 1)
 
-[Download - Global Models](https://facevc.blob.core.windows.net/zhanbo/old_photo/pretrain/Global/checkpoints.zip)
+[Download - BOPBTL Models](https://facevc.blob.core.windows.net/zhanbo/old_photo/pretrain/Global/checkpoints.zip)
 
-#### vae_a models
+#### Load Restore Old Photos Model
+
+##### vae_a
 
 Place in `models/vae/`.
 
 - VAE_A_quality/latest_net_G.pth
 
-#### vae_b models
+##### vae_b
 
 Extract the following models and place them inside `models/vae/`.
 
 - VAE_B_quality/latest_net_G.pth
 - VAE_B_scratch/latest_net_G.pth (scratch detection)
 
-#### mapping_net models
+##### mapping_net
 
 Extract the following models and place them inside `models/checkpoints/`.
 
@@ -79,7 +81,17 @@ Extract the following models and place them inside `models/checkpoints/`.
 - mapping_scratch/latest_net_mapping_net.pth (scratch detection)
 - mapping_Patch_Attention/latest_net_mapping_net.pth (mapping patch attention)
 
-### Load Face Detector (Dlib) (Stage 2)
+#### Load Scratch Mask Model
+
+##### scratch_model
+
+Extract the following models and place them inside `models/checkpoints/`.
+
+- detection/FT_Epoch_latest.pt
+
+### Face Detection Models (Stages 2-4)
+
+#### Load Face Detector Model (Dlib)
 
 [Download - shape_predictor_68_face_landmarks.dat](http://dlib.net/files/shape_predictor_68_face_landmarks.dat.bz2)
 
@@ -87,7 +99,7 @@ Extract the following models and place them inside `models/facedetection/` (cust
 
 - shape_predictor_68_face_landmarks.dat
 
-### Load Face Enhancer (Stage 3)
+#### Load Face Enhancer Model
 
 [Download - Face Enhancement Models](https://facevc.blob.core.windows.net/zhanbo/old_photo/pretrain/Face_Enhancement/checkpoints.zip)
 
@@ -100,11 +112,11 @@ Extract the following models and place them inside `models/checkpoints/`.
 
 TODO: [Finalize node interfaces.]
 
-### BOPBTL and Face Restoration
+### BOPBTL and Face Restoration (Stages 1-4)
 
 TODO: [Add workflow image.]
 
-### BOPBTL + Scratch Detection and Face Restoration
+### BOPBTL + Scratch Detection and Face Restoration (Stages 1-4)
 
 TODO: [Add workflow image.]
 
