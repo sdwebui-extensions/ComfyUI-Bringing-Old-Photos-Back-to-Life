@@ -1,8 +1,6 @@
 # ComfyUI-Bringing-Old-Photos-Back-to-Life
 
-Enhance images in [ComfyUI](https://github.com/comfyanonymous/ComfyUI). Optional features include automatic scratch removal and face enhancement.
-
-Forked from [microsoft/Bringing-Old-Photos-Back-to-Life](https://github.com/microsoft/Bringing-Old-Photos-Back-to-Life).
+Enhance images in [ComfyUI](https://github.com/comfyanonymous/ComfyUI). Optional features include automatic scratch removal and face enhancement. Based on [microsoft/Bringing-Old-Photos-Back-to-Life](https://github.com/microsoft/Bringing-Old-Photos-Back-to-Life).
 
 TODO: [Add Teaser]
 
@@ -60,6 +58,8 @@ pip install dlib==19.24.1
 
 #### Load Restore Old Photos Model
 
+Set `device_ids` as a comma separated list of device ids (i.e. `0` or `1,2`). Use `-1` for cpu.
+
 ##### vae_a
 
 Place in `models/vae/`.
@@ -107,10 +107,12 @@ Extract the following models and place them inside `models/facedetection/` (cust
 
 Extract the following models and place them inside `models/checkpoints/`.
 
+Set `device_ids` as a comma separated list of device ids (i.e. `0` or `1,2`). Use `-1` for cpu.
+
 ##### face_enhance_model
 
-- Setting_9_epoch_100/latest_net_G.pth (256)
-- FaceSR_512/latest_net_G.pth (512)
+- Setting_9_epoch_100/latest_net_G.pth (256x256)
+- FaceSR_512/latest_net_G.pth (512x512)
 
 ## 3. Workflows
 
@@ -131,27 +133,6 @@ TODO: [Add workflow image.]
 ### Face Restoration (Advanced) (Stages 2-4)
 
 TODO: [Add workflow image.]
-
-## Citation
-
-```bibtex
-@inproceedings{wan2020bringing,
-title={Bringing Old Photos Back to Life},
-author={Wan, Ziyu and Zhang, Bo and Chen, Dongdong and Zhang, Pan and Chen, Dong and Liao, Jing and Wen, Fang},
-booktitle={Proceedings of the IEEE/CVF Conference on Computer Vision and Pattern Recognition},
-pages={2747--2757},
-year={2020}
-}
-```
-
-```bibtex
-@article{wan2020old,
-  title={Old Photo Restoration via Deep Latent Space Translation},
-  author={Wan, Ziyu and Zhang, Bo and Chen, Dongdong and Zhang, Pan and Chen, Dong and Liao, Jing and Wen, Fang},
-  journal={arXiv preprint arXiv:2009.07047},
-  year={2020}
-}
-```
 
 ## License
 
