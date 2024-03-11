@@ -2,7 +2,6 @@ import os
 import gc
 import glob
 import warnings
-import argparse
 
 import torch
 from torch.utils.data import DataLoader
@@ -25,11 +24,8 @@ from .Face_Enhancement import test_face as FaceEnhancer
 from .Face_Enhancement.options.test_options import TestOptions as FaceEnhancerOptions
 from .Face_Enhancement.data.face_dataset import FaceTensorDataset
 
-try: # TODO: remove after debugging
-    import comfy.model_management
-    import folder_paths
-except Exception as error:
-    print("An exception occurred:", error)
+import comfy.model_management
+import folder_paths
 
 def search_custom_model_dir(dir:str , ext: str): # The issue with this is that it is hardcoded
     models = []
@@ -175,12 +171,12 @@ class LoadRestoreOldPhotosModel:
 
     @staticmethod
     def load_models(
-        device_ids: str, 
-        use_scratch_detection: str, 
-        mapping_patch_attention: str, 
-        mapping_net: str, 
-        vae_b: str, 
-        vae_a: str, 
+        device_id_list, 
+        use_scratch_detection: bool, 
+        mapping_patch_attention: bool, 
+        mapping_net_path: str, 
+        vae_b_path: str, 
+        vae_a_path: str, 
     ):
         opt = RestoreOptions()
         opt.initialize()
@@ -191,11 +187,11 @@ class LoadRestoreOldPhotosModel:
         opt.Quality_restore = not use_scratch_detection
         opt.Scratch_and_Quality_restore = use_scratch_detection
 
-        opt.test_vae_a = folder_paths.get_full_path("vae", vae_a)
-        opt.test_vae_b = folder_paths.get_full_path("vae", vae_b)
-        opt.test_mapping_net = folder_paths.get_full_path("checkpoints", mapping_net)
-        opt.HR = True if mapping_patch_attention == "True" else False
-        opt.gpu_ids = [int(n) for n in device_ids.split(",")]
+        opt.test_vae_a = vae_a_path
+        opt.test_vae_b = vae_b_path
+        opt.test_mapping_net = mapping_net_path
+        opt.HR = mapping_patch_attention
+        opt.gpu_ids = device_id_list
 
         #opt.test_vae_a = "./checkpoints/restoration/VAE_A_quality/latest_net_G.pth"
         #if opt.Quality_restore:
@@ -212,14 +208,22 @@ class LoadRestoreOldPhotosModel:
         image_transform, mask_transform = Restorer.get_transforms()
         return((opt, model, image_transform, mask_transform),)
 
-    def run(self, device_ids, use_scratch_detection, mapping_patch_attention, mapping_net, vae_b, vae_a):
+    def run(
+        self, 
+        device_ids: str, 
+        use_scratch_detection: str, 
+        mapping_patch_attention: str, 
+        mapping_net, 
+        vae_b, 
+        vae_a
+    ):
         return LoadRestoreOldPhotosModel.load_models(
-            device_ids, 
-            use_scratch_detection, 
-            mapping_patch_attention, 
-            mapping_net, 
-            vae_b, 
-            vae_a, 
+            [int(n) for n in device_ids.split(",")], 
+            True if use_scratch_detection == "True" else False, 
+            True if mapping_patch_attention == "True" else False, 
+            folder_paths.get_full_path("checkpoints", mapping_net), 
+            folder_paths.get_full_path("vae", vae_b), 
+            folder_paths.get_full_path("vae", vae_a), 
         )
 
 class RestoreOldPhotos:
@@ -245,7 +249,7 @@ class RestoreOldPhotos:
         }
 
     @staticmethod
-    def restore(image: torch.Tensor, bopbtl_models,scratch_mask: torch.Tensor = None):
+    def restore(image: torch.Tensor, bopbtl_models, scratch_mask: torch.Tensor = None):
         (opt, model, image_transform, mask_transform) = bopbtl_models
 
         image = image.permute(0, 3, 1, 2)
@@ -259,7 +263,8 @@ class RestoreOldPhotos:
                     opt.test_mode, 
                 )
             else:
-                pil_mask = torchvision.transforms.ToPILImage()(torch.stack([scratch_mask[i]])).convert("RGB")
+                mask = torch.stack([scratch_mask[i]])
+                pil_mask = torchvision.transforms.ToPILImage()(mask).convert("RGB")
                 transformed_image, transformed_mask, _ = Restorer.transform_image_and_mask(
                     pil_image, 
                     image_transform, 
@@ -275,7 +280,7 @@ class RestoreOldPhotos:
         restored_images = restored_images.permute(0, 2, 3, 1)
         return (restored_images,)
 
-    def run(self, image, bopbtl_models, scratch_mask):
+    def run(self, image, bopbtl_models, scratch_mask = None):
         return RestoreOldPhotos.restore(image, bopbtl_models, scratch_mask)
 
 class LoadFaceDetector:
