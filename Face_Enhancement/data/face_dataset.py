@@ -1,39 +1,29 @@
 # Copyright (c) Microsoft Corporation.
 # Licensed under the MIT License.
 
-from data.base_dataset import BaseDataset, get_params, get_transform
-from PIL import Image
-import util.util as util
+try:
+    from .base_dataset import BaseDataset, get_random_flip, get_transform
+    from ..util import util
+except:
+    from data.base_dataset import BaseDataset, get_random_flip, get_transform
+    import util
+
 import os
 import torch
+from PIL import Image
 
 
 class FaceTestDataset(BaseDataset):
     @staticmethod
     def modify_commandline_options(parser, is_train):
-        parser.add_argument(
-            "--no_pairing_check",
-            action="store_true",
-            help="If specified, skip sanity check of correct label-image file pairing",
-        )
-        #    parser.set_defaults(contain_dontcare_label=False)
-        #    parser.set_defaults(no_instance=True)
+        # parser.add_argument("--no_pairing_check", action="store_true", help="If specified, skip sanity check of correct label-image file pairing")
+        # parser.set_defaults(contain_dontcare_label=False)
+        # parser.set_defaults(no_instance=True)
         return parser
 
-    def initialize(self, opt):
-        self.opt = opt
-
-        image_path = os.path.join(opt.dataroot, opt.old_face_folder)
-        label_path = os.path.join(opt.dataroot, opt.old_face_label_folder)
-
-        image_list = os.listdir(image_path)
-        image_list = sorted(image_list)
-        # image_list=image_list[:opt.max_dataset_size]
-
-        self.label_paths = label_path  ## Just the root dir
-        self.image_paths = image_list  ## All the image name
-
-        self.parts = [
+    @staticmethod
+    def get_parts():
+        return [
             "skin",
             "hair",
             "l_brow",
@@ -54,49 +44,194 @@ class FaceTestDataset(BaseDataset):
             "hat",
         ]
 
-        size = len(self.image_paths)
-        self.dataset_size = size
+    def initialize(self, opt):
+        self.preprocess_mode = opt.preprocess_mode
+        self.load_size = opt.load_size
+        self.crop_size = opt.crop_size
+        self.aspect_ratio = opt.aspect_ratio
+        self.is_train = opt.isTrain
+        self.no_flip = opt.no_flip
+
+        self.image_dir = os.path.join(opt.dataroot, opt.old_face_folder)
+        self.label_dir = os.path.join(opt.dataroot, opt.old_face_label_folder)
+
+        image_list = os.listdir(self.image_dir)
+        image_list = sorted(image_list)
+        self.image_list = image_list
+
+        self.parts = FaceTestDataset.get_parts()
+
+    def get_image_transform(self, image_size, flip: bool):
+        return get_transform(
+            self.preprocess_mode, 
+            image_size, 
+            self.load_size, 
+            self.crop_size, 
+            self.aspect_ratio, 
+            self.is_train, 
+            self.no_flip, 
+            flip, 
+        )
+
+    def get_label_transform(self, image_size, flip: bool):
+        return get_transform(
+            self.preprocess_mode, 
+            image_size, 
+            self.load_size, 
+            self.crop_size, 
+            self.aspect_ratio, 
+            self.is_train, 
+            self.no_flip, 
+            flip, 
+            method=Image.NEAREST, 
+            normalize=False, 
+        )
 
     def __getitem__(self, index):
+        image_size = (-1, -1)
+        flip = get_random_flip()
+        transform_image = self.get_image_transform(image_size, flip)
+        transform_label = self.get_label_transform(image_size, flip)
 
-        params = get_params(self.opt, (-1, -1))
-        image_name = self.image_paths[index]
-        image_path = os.path.join(self.opt.dataroot, self.opt.old_face_folder, image_name)
-        image = Image.open(image_path)
-        image = image.convert("RGB")
+        # load image
+        rel_image_path = self.image_list[index]
+        image_path = os.path.join(self.image_dir, rel_image_path)
+        image_name = os.path.splitext(rel_image_path)[0]
+        image = Image.open(image_path).convert("RGB")
 
-        transform_image = get_transform(self.opt, params)
+        # transform image
         image_tensor = transform_image(image)
 
-        img_name = image_name[:-4]
-        transform_label = get_transform(self.opt, params, method=Image.NEAREST, normalize=False)
-        full_label = []
+        # load labels
+        labels = []
+        for part in self.parts:
+            part_name = image_name + "_" + part + ".png"
+            part_path = os.path.join(self.label_dir, part_name)
 
-        cnt = 0
+            if os.path.exists(part_path):
+                # load label
+                label = Image.open(part_path).convert("RGB")
 
-        for each_part in self.parts:
-            part_name = img_name + "_" + each_part + ".png"
-            part_url = os.path.join(self.label_paths, part_name)
-
-            if os.path.exists(part_url):
-                label = Image.open(part_url).convert("RGB")
-                label_tensor = transform_label(label)  ## 3 channels and pixel [0,1]
-                full_label.append(label_tensor[0])
+                # transform label
+                label_tensor = transform_label(label)[0]  ## 3 channels and pixel [0,1]
             else:
-                current_part = torch.zeros((self.opt.load_size, self.opt.load_size))
-                full_label.append(current_part)
-                cnt += 1
+                # create empty label
+                label_tensor = torch.zeros((self.load_size, self.load_size))
+            labels.append(label_tensor)
+        labels_tensor = torch.stack(labels, 0)
 
-        full_label_tensor = torch.stack(full_label, 0)
-
-        input_dict = {
-            "label": full_label_tensor,
+        return {
+            "label": labels_tensor,
             "image": image_tensor,
             "path": image_path,
         }
 
-        return input_dict
+    def __len__(self):
+        return len(self.image_list)
+
+
+class FaceTensorDataset(BaseDataset):
+    @staticmethod
+    def modify_commandline_options(parser, is_train):
+        return parser
+
+    @staticmethod
+    def get_parts():
+        return [
+            "skin",
+            "hair",
+            "l_brow",
+            "r_brow",
+            "l_eye",
+            "r_eye",
+            "eye_g",
+            "l_ear",
+            "r_ear",
+            "ear_r",
+            "nose",
+            "mouth",
+            "u_lip",
+            "l_lip",
+            "neck",
+            "neck_l",
+            "cloth",
+            "hat",
+        ]
+
+    def initialize(
+        self, 
+        preprocess_mode: str, 
+        load_size: int, 
+        crop_size: int, 
+        aspect_ratio: float, 
+        is_train: bool, 
+        no_flip: bool, 
+        image_list, 
+        parts_list, 
+    ):
+        self.preprocess_mode = preprocess_mode
+        self.load_size = load_size
+        self.crop_size = crop_size
+        self.aspect_ratio = aspect_ratio
+        self.is_train = is_train
+        self.no_flip = no_flip
+
+        self.image_list = image_list
+        self.parts_list = parts_list
+
+    def get_image_transform(self, image_size, flip: bool):
+        return get_transform(
+            self.preprocess_mode, 
+            image_size, 
+            self.load_size, 
+            self.crop_size, 
+            self.aspect_ratio, 
+            self.is_train, 
+            self.no_flip, 
+            flip, 
+        )
+
+    def get_label_transform(self, image_size, flip: bool):
+        return get_transform(
+            self.preprocess_mode, 
+            image_size, 
+            self.load_size, 
+            self.crop_size, 
+            self.aspect_ratio, 
+            self.is_train, 
+            self.no_flip, 
+            flip, 
+            method=Image.NEAREST, 
+            normalize=False, 
+        )
+
+    def __getitem__(self, index):
+        image_size = (-1, -1)
+        flip = get_random_flip()
+        transform_image = self.get_image_transform(image_size, flip)
+        transform_label = self.get_label_transform(image_size, flip)
+
+        # load image
+        image = self.image_list[index]
+
+        # transform image
+        image_tensor = transform_image(image)
+
+        # load labels
+        labels = []
+        for part in self.parts_list:
+            if part is not None:
+                label_tensor = transform_label(part)[0]  ## 3 channels and pixel [0,1]
+            else:
+                label_tensor = torch.zeros((self.load_size, self.load_size))
+            labels.append(label_tensor)
+        labels_tensor = torch.stack(labels, 0)
+
+        return {
+            "label": labels_tensor,
+            "image": image_tensor,
+        }
 
     def __len__(self):
-        return self.dataset_size
+        return len(self.image_list)
 

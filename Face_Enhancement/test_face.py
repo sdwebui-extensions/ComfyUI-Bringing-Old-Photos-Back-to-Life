@@ -2,44 +2,65 @@
 # Licensed under the MIT License.
 
 import os
-from collections import OrderedDict
 
-import data
-from options.test_options import TestOptions
-from models.pix2pix_model import Pix2PixModel
-from util.visualizer import Visualizer
+try:
+    from .options.test_options import TestOptions
+    from .models.pix2pix_model import Pix2PixModel
+    from .data.face_dataset import FaceTestDataset
+except:
+    from options.test_options import TestOptions
+    from models.pix2pix_model import Pix2PixModel
+    from data.face_dataset import FaceTestDataset
+
 import torchvision.utils as vutils
 import warnings
 warnings.filterwarnings("ignore", category=UserWarning)
 
-opt = TestOptions().parse()
-
-dataloader = data.create_dataloader(opt)
-
-model = Pix2PixModel(opt)
-model.eval()
-
-visualizer = Visualizer(opt)
+from torch.utils.data import DataLoader
 
 
-single_save_url = os.path.join(opt.checkpoints_dir, opt.name, opt.results_dir, "each_img")
+def create_directory_dataloader(opt):
+    instance = FaceTestDataset()
+    instance.initialize(opt)
+    print("dataset [%s] of size %d was created" % (type(instance).__name__, len(instance)))
+    dataloader = DataLoader(
+        instance,
+        batch_size=opt.batchSize,
+        shuffle=not opt.serial_batches,
+        num_workers=int(opt.nThreads),
+        drop_last=opt.isTrain,
+    )
+    return dataloader
 
 
-if not os.path.exists(single_save_url):
-    os.makedirs(single_save_url)
+def load_model(opt):
+    model = Pix2PixModel(opt)
+    model.eval()
+    return model
 
 
-for i, data_i in enumerate(dataloader):
-    if i * opt.batchSize >= opt.how_many:
-        break
+def main(model: Pix2PixModel, dataloader: DataLoader, output_dir: str, batch_size: int, max_process_count: int):
+    if not os.path.exists(output_dir):
+        os.makedirs(output_dir)
 
-    generated = model(data_i, mode="inference")
+    for i, batch in enumerate(dataloader):
+        if i * batch_size >= max_process_count:
+            break
 
-    img_path = data_i["path"]
+        # enhance faces
+        enhanced_faces = model(batch, mode="inference")
+        for i in range(len(enhanced_faces)):
+            enhanced_faces[i] = (enhanced_faces[i] + 1) / 2
 
-    for b in range(generated.shape[0]):
-        img_name = os.path.split(img_path[b])[-1]
-        save_img_url = os.path.join(single_save_url, img_name)
+        # save image
+        for path, enhanced_face in zip(batch["path"], enhanced_faces):
+            image_name = os.path.split(path)[1]
+            image_path = os.path.join(output_dir, image_name)
+            vutils.save_image(enhanced_face, image_path)
 
-        vutils.save_image((generated[b] + 1) / 2, save_img_url)
 
+if __name__ == "__main__":
+    opt = TestOptions().parse()
+    model = load_model(opt)
+    dataloader = create_directory_dataloader(opt)
+    main(model, dataloader, opt.results_dir, opt.batchSize, opt.how_many)

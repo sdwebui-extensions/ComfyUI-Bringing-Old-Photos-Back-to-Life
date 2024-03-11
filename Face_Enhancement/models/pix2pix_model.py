@@ -2,8 +2,12 @@
 # Licensed under the MIT License.
 
 import torch
-import models.networks as networks
-import util.util as util
+try:
+    from . import networks
+    from ..util import util
+except:
+    import models.networks as networks
+    import util.util as util
 
 
 class Pix2PixModel(torch.nn.Module):
@@ -86,7 +90,7 @@ class Pix2PixModel(torch.nn.Module):
         netE = networks.define_E(opt) if opt.use_vae else None
 
         if not opt.isTrain or opt.continue_train:
-            netG = util.load_network(netG, "G", opt.which_epoch, opt)
+            netG = util.load_network(netG, "G", opt.which_epoch, opt, test_path=opt.test_path_G)
             if opt.isTrain:
                 netD = util.load_network(netD, "D", opt.which_epoch, opt)
             if opt.use_vae:

@@ -100,7 +100,7 @@ if __name__ == "__main__":
         "python detect_all_dlib.py" 
         + " --url " + stage_2_input_dir 
         + " --save_url " + stage_2_output_dir 
-        + " --side_length " + str(512 if opts.HR else 256) 
+        + " --face_size " + str(512 if opts.HR else 256) 
     )
     run_cmd(stage_2_command)
     print("Finish Stage 2 ...")

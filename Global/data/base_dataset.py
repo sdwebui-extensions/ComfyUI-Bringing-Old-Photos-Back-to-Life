@@ -17,68 +17,83 @@ class BaseDataset(data.Dataset):
     def initialize(self, opt):
         pass
 
-def get_params(opt, size):
-    w, h = size
+def get_crop_pos(image_size, resize_or_crop: str, load_size: int, fine_size: int):
+    w, h = image_size
     new_h = h
     new_w = w
-    if opt.resize_or_crop == 'resize_and_crop':
-        new_h = new_w = opt.loadSize
-
-    if opt.resize_or_crop == 'scale_width_and_crop': # we scale the shorter side into 256
-
+    if resize_or_crop == 'resize_and_crop':
+        new_h = new_w = load_size
+    elif resize_or_crop == 'scale_width_and_crop': # we scale the shorter side into 256
         if w<h:
-            new_w = opt.loadSize
-            new_h = opt.loadSize * h // w
+            new_w = load_size
+            new_h = load_size * h // w
         else:
-            new_h=opt.loadSize
-            new_w = opt.loadSize * w // h
-
-    if opt.resize_or_crop=='crop_only':
+            new_h = load_size
+            new_w = load_size * w // h
+    elif resize_or_crop == 'crop_only':
         pass
+    else:
+        raise NotImplementedError("Unknown type of 'resize_or_crop' value!")
 
+    x = random.randint(0, np.maximum(0, new_w - fine_size))
+    y = random.randint(0, np.maximum(0, new_h - fine_size))
+    return (x, y)
 
-    x = random.randint(0, np.maximum(0, new_w - opt.fineSize))
-    y = random.randint(0, np.maximum(0, new_h - opt.fineSize))
-    
-    flip = random.random() > 0.5
-    return {'crop_pos': (x, y), 'flip': flip}
+def get_random_flip() -> bool:
+    return random.random() > 0.5
 
-def get_transform(opt, params, method=Image.BICUBIC, normalize=True):
+def get_transform(
+    resize_or_crop: str, 
+
+    image_size, 
+    load_size: int, 
+    fine_size: int, 
+    test_random_crop: bool, 
+
+    is_train: bool, 
+    no_flip: bool, 
+    flip: bool, 
+
+    n_downsample_global: int, 
+    netG: str, 
+    n_local_enhancers: int, 
+
+    method=Image.BICUBIC, 
+    normalize=True
+):
     transform_list = []
-    if 'resize' in opt.resize_or_crop:
-        osize = [opt.loadSize, opt.loadSize]
-        transform_list.append(transforms.Scale(osize, method))   
-    elif 'scale_width' in opt.resize_or_crop:
-    #    transform_list.append(transforms.Lambda(lambda img: __scale_width(img, opt.loadSize, method)))  ## Here , We want the shorter side to match 256, and Scale will finish it.
+    if 'resize' in resize_or_crop:
+        osize = [load_size, load_size]
+        transform_list.append(transforms.Scale(osize, method))
+    elif 'scale_width' in resize_or_crop:
+        # transform_list.append(transforms.Lambda(lambda img: __scale_width(img, loadSize, method)))  ## Here , We want the shorter side to match 256, and Scale will finish it.
         transform_list.append(transforms.Scale(256,method))
 
-    if 'crop' in opt.resize_or_crop:
-        if opt.isTrain:
-            transform_list.append(transforms.Lambda(lambda img: __crop(img, params['crop_pos'], opt.fineSize)))
+    if 'crop' in resize_or_crop:
+        if is_train:
+            crop_pos = get_crop_pos(image_size, resize_or_crop, load_size, fine_size)
+            transform_list.append(transforms.Lambda(lambda img: __crop(img, crop_pos, fine_size)))
         else:
-            if opt.test_random_crop:
-                transform_list.append(transforms.RandomCrop(opt.fineSize))
+            if test_random_crop:
+                transform_list.append(transforms.RandomCrop(fine_size))
             else:
-                transform_list.append(transforms.CenterCrop(opt.fineSize))
+                transform_list.append(transforms.CenterCrop(fine_size))
 
     ## when testing, for ablation study, choose center_crop directly.
 
-
-
-    if opt.resize_or_crop == 'none':
-        base = float(2 ** opt.n_downsample_global)
-        if opt.netG == 'local':
-            base *= (2 ** opt.n_local_enhancers)
+    if resize_or_crop == 'none':
+        base = float(2 ** n_downsample_global)
+        if netG == 'local':
+            base *= (2 ** n_local_enhancers)
         transform_list.append(transforms.Lambda(lambda img: __make_power_2(img, base, method)))
 
-    if opt.isTrain and not opt.no_flip:
-        transform_list.append(transforms.Lambda(lambda img: __flip(img, params['flip'])))
+    if is_train and not no_flip:
+        transform_list.append(transforms.Lambda(lambda img: __flip(img, flip)))
 
     transform_list += [transforms.ToTensor()]
 
     if normalize:
-        transform_list += [transforms.Normalize((0.5, 0.5, 0.5),
-                                                (0.5, 0.5, 0.5))]
+        transform_list += [transforms.Normalize((0.5, 0.5, 0.5),  (0.5, 0.5, 0.5))]
     return transforms.Compose(transform_list)
 
 def normalize():    

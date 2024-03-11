@@ -4,7 +4,7 @@
 import os.path
 import io
 import zipfile
-from data.base_dataset import BaseDataset, get_params, get_transform, normalize
+from data.base_dataset import BaseDataset, get_random_flip, get_transform, normalize
 from data.image_folder import make_dataset
 from PIL import Image
 import torchvision.transforms as transforms
@@ -264,8 +264,19 @@ class UnPairOldPhotos_SR(BaseDataset):  ## Synthetic + Real Old
             A=transforms.Scale(256,Image.BICUBIC)(A)
         ## Since we want to only crop the images (256*256), for those old photos whose size is smaller than 256, we first resize them.
 
-        transform_params = get_params(self.opt, A.size)
-        A_transform = get_transform(self.opt, transform_params)
+        A_transform = get_transform(
+            self.opt.resize_or_crop, 
+            A.size, 
+            self.opt.loadSize, 
+            self.opt.fineSize, 
+            self.opt.test_random_crop, 
+            self.opt.isTrain, 
+            self.opt.no_flip, 
+            get_random_flip(), 
+            self.opt.n_downsample_global, 
+            self.opt.netG, 
+            self.opt.n_local_enhancers, 
+        )
 
         B_tensor = inst_tensor = feat_tensor = 0
         A_tensor = A_transform(A)
@@ -355,13 +366,23 @@ class PairOldPhotos(BaseDataset):
             B=transforms.Scale(256, Image.BICUBIC)(B)
 
         # apply the same transform to both A and B
-        transform_params = get_params(self.opt, A.size)
-        A_transform = get_transform(self.opt, transform_params)
-        B_transform = get_transform(self.opt, transform_params)
+        transform = get_transform(
+            self.opt.resize_or_crop, 
+            A.size, 
+            self.opt.loadSize, 
+            self.opt.fineSize, 
+            self.opt.test_random_crop, 
+            self.opt.isTrain, 
+            self.opt.no_flip, 
+            get_random_flip(), 
+            self.opt.n_downsample_global, 
+            self.opt.netG, 
+            self.opt.n_local_enhancers, 
+        )
 
         B_tensor = inst_tensor = feat_tensor = 0
-        A_tensor = A_transform(A)
-        B_tensor = B_transform(B)
+        A_tensor = transform(A)
+        B_tensor = transform(B)
 
         input_dict = {'label': A_tensor, 'inst': inst_tensor, 'image': B_tensor,
                     'feat': feat_tensor, 'path': path}
@@ -455,19 +476,30 @@ class PairOldPhotos_with_hole(BaseDataset):
         if not self.opt.isTrain and self.opt.hole_image_no_mask:
             mask=zero_mask(256)
 
-        transform_params = get_params(self.opt, A.size)
-        A_transform = get_transform(self.opt, transform_params)
-        B_transform = get_transform(self.opt, transform_params)
+        flip = get_random_flip()
+        transform = get_transform(
+            self.opt.resize_or_crop, 
+            A.size, 
+            self.opt.loadSize, 
+            self.opt.fineSize, 
+            self.opt.test_random_crop, 
+            self.opt.isTrain, 
+            self.opt.no_flip, 
+            get_random_flip(), 
+            self.opt.n_downsample_global, 
+            self.opt.netG, 
+            self.opt.n_local_enhancers, 
+        )
 
-        if transform_params['flip'] and self.opt.isTrain:
+        if flip and self.opt.isTrain:
             mask=mask.transpose(Image.FLIP_LEFT_RIGHT)
 
         mask_tensor = transforms.ToTensor()(mask)
 
 
         B_tensor = inst_tensor = feat_tensor = 0
-        A_tensor = A_transform(A)
-        B_tensor = B_transform(B)
+        A_tensor = transform(A)
+        B_tensor = transform(B)
 
         input_dict = {'label': A_tensor, 'inst': mask_tensor[:1], 'image': B_tensor,
                     'feat': feat_tensor, 'path': path}

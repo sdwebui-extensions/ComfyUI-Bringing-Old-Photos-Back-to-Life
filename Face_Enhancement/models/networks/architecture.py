@@ -6,7 +6,10 @@ import torch.nn as nn
 import torch.nn.functional as F
 import torchvision
 import torch.nn.utils.spectral_norm as spectral_norm
-from models.networks.normalization import SPADE
+try:
+    from .normalization import SPADE
+except:
+    from models.networks.normalization import SPADE
 
 
 # ResNet block that uses SPADE.

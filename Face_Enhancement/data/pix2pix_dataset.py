@@ -1,10 +1,15 @@
 # Copyright (c) Microsoft Corporation.
 # Licensed under the MIT License.
 
-from data.base_dataset import BaseDataset, get_params, get_transform
-from PIL import Image
-import util.util as util
+try:
+    from .base_dataset import BaseDataset, get_crop_pos, get_random_flip, get_transform
+    from ..util.util import util
+except:
+    from data.base_dataset import BaseDataset, get_crop_pos, get_random_flip, get_transform
+    import util.util as util
+
 import os
+from PIL import Image
 
 
 class Pix2pixDataset(BaseDataset):
@@ -61,8 +66,19 @@ class Pix2pixDataset(BaseDataset):
         # Label Image
         label_path = self.label_paths[index]
         label = Image.open(label_path)
-        params = get_params(self.opt, label.size)
-        transform_label = get_transform(self.opt, params, method=Image.NEAREST, normalize=False)
+        flip = get_random_flip()
+        transform_label = get_transform(
+            self.opt.preprocess_mode, 
+            label.size, 
+            self.opt.load_size, 
+            self.opt.crop_size, 
+            self.opt.aspect_ratio, 
+            self.opt.isTrain, 
+            self.opt.no_flip, 
+            flip, 
+            method=Image.NEAREST, 
+            normalize=False
+        )
         label_tensor = transform_label(label) * 255.0
         label_tensor[label_tensor == 255] = self.opt.label_nc  # 'unknown' is opt.label_nc
 
@@ -74,7 +90,16 @@ class Pix2pixDataset(BaseDataset):
         image = Image.open(image_path)
         image = image.convert("RGB")
 
-        transform_image = get_transform(self.opt, params)
+        transform_image = get_transform(
+            self.opt.preprocess_mode, 
+            label.size, 
+            self.opt.load_size, 
+            self.opt.crop_size, 
+            self.opt.aspect_ratio, 
+            self.opt.isTrain, 
+            self.opt.no_flip, 
+            flip, 
+        )
         image_tensor = transform_image(image)
 
         # if using instance maps

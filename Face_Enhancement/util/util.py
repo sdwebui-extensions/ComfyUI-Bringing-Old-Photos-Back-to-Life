@@ -9,7 +9,8 @@ import numpy as np
 from PIL import Image
 import os
 import argparse
-import dill as pickle
+#import dill as pickle
+import pickle
 
 
 def save_obj(obj, name):
@@ -146,9 +147,9 @@ def str2bool(v):
         raise argparse.ArgumentTypeError("Boolean value expected.")
 
 
-def find_class_in_module(target_cls_name, module):
+def find_class_in_module(target_cls_name, module, package=None):
     target_cls_name = target_cls_name.replace("_", "").lower()
-    clslib = importlib.import_module(module)
+    clslib = importlib.import_module(module, package)
     cls = None
     for name, clsobj in clslib.__dict__.items():
         if name.lower() == target_cls_name:
@@ -172,13 +173,22 @@ def save_network(net, label, epoch, opt):
         net.cuda()
 
 
-def load_network(net, label, epoch, opt):
-    save_filename = "%s_net_%s.pth" % (epoch, label)
-    save_dir = os.path.join(opt.checkpoints_dir, opt.name)
-    save_path = os.path.join(save_dir, save_filename)
+def load_network_from_path(net, save_path):
     if os.path.exists(save_path):
         weights = torch.load(save_path)
         net.load_state_dict(weights)
+    else:
+        raise RuntimeError("Unable to find network!")
+    return net
+
+
+def load_network(net, label, epoch, opt, test_path=""):
+    if test_path != "":
+        return load_network_from_path(net, test_path)
+    save_filename = "%s_net_%s.pth" % (epoch, label)
+    save_dir = os.path.join(opt.checkpoints_dir, opt.name)
+    save_path = os.path.join(save_dir, save_filename)
+    net = load_network_from_path(net, save_path)
     return net
 
 

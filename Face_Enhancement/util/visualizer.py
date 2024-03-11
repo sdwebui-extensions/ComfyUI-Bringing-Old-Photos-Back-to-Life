@@ -12,7 +12,10 @@ try:
 except ImportError:
     from io import BytesIO  # Python 3.x
 import torchvision.utils as vutils
-from tensorboardX import SummaryWriter
+try:
+    from tensorboardX import SummaryWriter
+except:
+    pass
 import torch
 import numpy as np
 
