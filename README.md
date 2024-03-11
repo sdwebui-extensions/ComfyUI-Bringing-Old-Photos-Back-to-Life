@@ -1,5 +1,7 @@
 # comfy-bringing-old-photos-back-to-life
 
+TODO: [Change repo name]
+
 Restore images in ComfyUI. Optionally use automatic scratch removal and face enhancement. Built on [microsoft/Bringing-Old-Photos-Back-to-Life](https://github.com/microsoft/Bringing-Old-Photos-Back-to-Life).
 
 TODO: [Add Teaser]
@@ -10,7 +12,7 @@ TODO: [Add Teaser]
 
 This repo has to be downloaded and extracted in two separate locations.
 
-TODO: [Can this be simplified somehow?]
+TODO: [Can this be simplified somehow? Ideally so it can be added to ComfyUI node manager.]
 
 Bash:
 
