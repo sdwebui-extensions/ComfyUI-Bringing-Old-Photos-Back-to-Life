@@ -617,7 +617,7 @@ class BlendFaces:
             face_landmarks, 
         )
 
-class DetectRestoreBlendFaces:
+class DetectEnhanceBlendFaces:
     RETURN_TYPES = ("IMAGE", )
     RETURN_NAMES = ("image", )
     FUNCTION = "run"
@@ -650,7 +650,7 @@ class DetectRestoreBlendFaces:
             return (image,)
 
     def run(self, image, dlib_model, face_enhance_model):
-        return DetectRestoreBlendFaces.enhance_faces(image, dlib_model, face_enhance_model)
+        return DetectEnhanceBlendFaces.enhance_faces(image, dlib_model, face_enhance_model)
 
 NODE_CLASS_MAPPINGS = {
     "BOPBTL_ScratchMask": ScratchMask,
@@ -663,7 +663,7 @@ NODE_CLASS_MAPPINGS = {
     "BOPBTL_EnhanceFaces": EnhanceFaces,
     "BOPBTL_EnhanceFacesAdvanced": EnhanceFacesAdvanced,
     "BOPBTL_BlendFaces": BlendFaces,
-    "BOPBTL_DetectRestoreBlendFaces": DetectRestoreBlendFaces,
+    "BOPBTL_DetectEnhanceBlendFaces": DetectEnhanceBlendFaces,
 }
 
 NODE_DISPLAY_NAME_MAPPINGS = {
@@ -677,5 +677,5 @@ NODE_DISPLAY_NAME_MAPPINGS = {
     "BOPBTL_EnhanceFaces": "Enhance Faces",
     "BOPBTL_EnhanceFacesAdvanced": "Enhance Faces (Advanced)",
     "BOPBTL_BlendFaces": "Blend Faces (Dlib)",
-    "BOPBTL_DetectRestoreBlendFaces": "Detect-Restore-Blend Faces (dlib)",
+    "BOPBTL_DetectEnhanceBlendFaces": "Detect-Enhance-Blend Faces (dlib)",
 }
