@@ -505,7 +505,7 @@ def main(checkpoint_path: str, origin_url: str, replace_url: str, save_url: str,
             )  ## Nearest neighbour
             blended = blur_blending_cv2(warped_back, blended, backward_mask)
             blended *= 255.0
-        blended / 255.0
+        blended = blended / 255.0
 
         io.imsave(os.path.join(save_url, x), img_as_ubyte(blended))
 

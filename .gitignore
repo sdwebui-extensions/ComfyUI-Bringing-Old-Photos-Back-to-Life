@@ -15,9 +15,4 @@ matrix_auth
 channels.list
 comfyworkflows_sharekey
 
-Global/detection_models/sync_batchnorm/
-Global/detection_models/Synchronized-BatchNorm-PyTorch/
-Face_Enhancement/models/networks/sync_batchnorm/
-Face_Enhancement/models/networks/Synchronized-BatchNorm-PyTorch/
-
 outputs/

@@ -13,7 +13,10 @@ import torch
 import torchvision as tv
 import torch.backends.cudnn as cudnn
 
-# from torch.utils.tensorboard import SummaryWriter
+try:
+    from torch.utils.tensorboard import SummaryWriter
+except:
+    pass
 
 import yaml
 import matplotlib.pyplot as plt

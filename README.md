@@ -6,49 +6,12 @@ TODO: [Add Teaser]
 
 ## 1. Requirements
 
-### Synchronized BatchNorm Models
-
-This repo has to be downloaded and extracted in two separate locations.
-
-TODO: [Can this be simplified somehow? Ideally so it can be added to ComfyUI node manager.]
-
-UNIX Shell:
-
-```bash
-cd Face_Enhancement/models/networks/
-git clone https://github.com/vacancy/Synchronized-BatchNorm-PyTorch.git
-cp -rf Synchronized-BatchNorm-PyTorch/sync_batchnorm .
+```shell
+cd ./ComfyUI-Bringing-Old-Photos-Back-to-Life/
+pip install -r requirements.txt --upgrade
 ```
 
-```bash
-cd Global/detection_models/
-git clone https://github.com/vacancy/Synchronized-BatchNorm-PyTorch.git
-cp -rf Synchronized-BatchNorm-PyTorch/sync_batchnorm .
-```
-
-Powershell:
-
-```powershell
-cd Face_Enhancement/models/networks/
-git clone https://github.com/vacancy/Synchronized-BatchNorm-PyTorch.git
-Copy-Item -Path "Synchronized-BatchNorm-PyTorch/sync_batchnorm" -Destination . -Recurse -Force
-```
-
-```powershell
-cd Global/detection_models/
-git clone https://github.com/vacancy/Synchronized-BatchNorm-PyTorch.git
-Copy-Item -Path "Synchronized-BatchNorm-PyTorch/sync_batchnorm" -Destination . -Recurse -Force
-```
-
-### Dlib
-
-Dlib is only required for Stages 2-4 for face detection, so it is optional.
-
-Make sure to install dlib to the python and virtual environment for ComfyUI.
-
-```python
-pip install dlib==19.24.1
-```
+PyTorch and TorchVision are also required, but should already be installed. (See the main ComfyUI repo for installation details.)
 
 ## 2. Models
 
