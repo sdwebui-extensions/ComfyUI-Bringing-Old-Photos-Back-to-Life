@@ -328,6 +328,12 @@ class DetectFaces:
     OUTPUT_NODE = True
     CATEGORY = "image"
 
+    class NoFacesDetected(Exception):
+        def __init__(self):
+            message = "No faces detected!"
+            self.message = message
+            super().__init__(message)
+
     def __init__(self):
         pass
 
@@ -366,7 +372,7 @@ class DetectFaces:
             aligned_faces += faces
             faces_landmarks += landmarks
         if len(aligned_faces) == 0:
-            raise RuntimeError("No faces were found!")
+            raise DetectFaces.NoFacesDetected()
         aligned_faces = torch.stack(aligned_faces)
 
         return (face_counts, aligned_faces, faces_landmarks)
@@ -644,9 +650,8 @@ class DetectEnhanceBlendFaces:
             face_count, cropped_faces, face_landmarks = DetectFaces.detect_faces_batch(dlib_model, image, load_size)
             _, enhanced_faces = EnhanceFaces.enhance_faces(face_enhance_model, face_count, cropped_faces)
             return BlendFaces.blend_faces(image, face_count, enhanced_faces, face_landmarks)
-        except Exception as e:
-            # the case where there are no faces
-            print(e)
+        except DetectFaces.NoFacesDetected as e:
+            #print(e.message)
             return (image,)
 
     def run(self, image, dlib_model, face_enhance_model):
