@@ -351,7 +351,7 @@ class DetectFaces:
         }
 
     @staticmethod
-    def detect_faces_batch(dlib_model, image: torch.Tensor, face_size: str):
+    def detect_faces_batch(dlib_model, image: torch.Tensor, face_size: str, throw_error: bool = False):
         (face_detector, landmark_locator) = dlib_model
         face_size = int(face_size)
 
@@ -371,11 +371,15 @@ class DetectFaces:
             face_counts.append(len(faces))
             aligned_faces += faces
             faces_landmarks += landmarks
-        if len(aligned_faces) == 0:
-            raise DetectFaces.NoFacesDetected()
-        aligned_faces = torch.stack(aligned_faces)
+        no_faces_detected = len(aligned_faces) == 0
+        if no_faces_detected:
+            if throw_error:
+                raise DetectFaces.NoFacesDetected()
+            aligned_faces = image.permute(0, 2, 3, 1)
+        else:
+            aligned_faces = torch.stack(aligned_faces)
 
-        return (face_counts, aligned_faces, faces_landmarks)
+        return ((face_counts, no_faces_detected), aligned_faces, faces_landmarks)
 
     def run(self, dlib_model, image, face_size):
         return DetectFaces.detect_faces_batch(dlib_model, image, face_size)
@@ -452,6 +456,10 @@ class EnhanceFaces:
         cropped_faces: torch.Tensor, 
         face_parts = [], 
     ):
+        face_counts, no_faces_detected = face_count
+        if no_faces_detected:
+            return (face_count, cropped_faces)
+
         model, load_size = face_enhance_model
         if load_size == 512:
             batch_size = 1
@@ -601,12 +609,15 @@ class BlendFaces:
         enhanced_cropped_faces: torch.Tensor, 
         face_landmarks, 
     ):
+        face_counts, no_faces_detected = face_count
+        if no_faces_detected:
+            return (original_image, )
         face_size = enhanced_cropped_faces.size()[2]
         np_image = tensor_images_to_numpy(original_image)
         np_enhanced_face = tensor_images_to_numpy(enhanced_cropped_faces)
         blended_images = FaceBlender.blend_faces(
             np_image, 
-            face_count, 
+            face_counts, 
             np_enhanced_face, 
             face_landmarks, 
             face_size, 
@@ -647,7 +658,7 @@ class DetectEnhanceBlendFaces:
     def enhance_faces(image: torch.Tensor, dlib_model, face_enhance_model):
         try:
             _, load_size = face_enhance_model
-            face_count, cropped_faces, face_landmarks = DetectFaces.detect_faces_batch(dlib_model, image, load_size)
+            face_count, cropped_faces, face_landmarks = DetectFaces.detect_faces_batch(dlib_model, image, load_size, throw_error=True)
             _, enhanced_faces = EnhanceFaces.enhance_faces(face_enhance_model, face_count, cropped_faces)
             return BlendFaces.blend_faces(image, face_count, enhanced_faces, face_landmarks)
         except DetectFaces.NoFacesDetected as e:

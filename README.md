@@ -6,12 +6,14 @@ Enhance images in [ComfyUI](https://github.com/comfyanonymous/ComfyUI). Optional
 
 ## 1. Requirements
 
+Before installing, make sure that any virtual environment is activated and if needed, prepend the target python to the pip command.
+
 ```shell
 cd ./ComfyUI-Bringing-Old-Photos-Back-to-Life/
 pip install -r requirements.txt --upgrade
 ```
 
-PyTorch and TorchVision are also required, but should already be installed. (See the main ComfyUI repo for installation details.)
+PyTorch and TorchVision are also required, but should already be installed. (See the main ComfyUI repo for [installation details](https://github.com/comfyanonymous/ComfyUI?tab=readme-ov-file#installing).)
 
 ## 2. Models
 
@@ -86,6 +88,19 @@ Set `device_ids` as a comma separated list of device ids (i.e. `0` or `1,2`). Us
 ### Face Enhancement (Advanced) (Stages 2-4)
 
 ![Screenshot of advanced face enhancement node workflow for Bringing Old Photos Back to Life in ComfyUI.](imgs/bopbtl-enhance-face-advanced-512.png)
+
+### x4 BOPBTL + Scratch Detection and Face Enhancement (Advanced)
+
+![Screenshot of full node x4 workflow with advanced face enhancement for Bringing Old Photos Back to Life in ComfyUI.](imgs/bopbtl-full-workflow-advanced-512-x4-upscale-previews.png)
+
+#### Using [ComfyUI-Image-Round](https://github.com/cdb-boop/comfyui-image-round) Node
+
+![Screenshot of full node x4 workflow with advanced face enhancement, and using my custom "Image Rounding" node for Bringing Old Photos Back to Life in ComfyUI.](imgs/bopbtl-full-workflow-advanced-512-x4-upscale-round-pad-nearest-16-previews.png)
+
+## 4. Hints
+
+- Images may need to be scaled/cropped/padded to the nearest 8 or 16 pixels to avoid a crash. (Use something like my other [ComfyUI-Image-Round](https://github.com/cdb-boop/comfyui-image-round) node)
+- "Detect Faces (Dlib)" and "Enhance Faces" nodes will currently return the original image if no faces were found.
 
 ## License
 
