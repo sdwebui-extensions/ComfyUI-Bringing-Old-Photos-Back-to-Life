@@ -95,9 +95,15 @@ Set `device_ids` as a comma separated list of device ids (i.e. `0` or `1,2`). Us
 
 ![Screenshot of full node x4 workflow with advanced face enhancement for Bringing Old Photos Back to Life in ComfyUI.](imgs/bopbtl-full-workflow-advanced-512-x4-upscale-previews.png)
 
-#### Using [ComfyUI-Image-Round](https://github.com/cdb-boop/comfyui-image-round) Nodes
+### Using [ComfyUI-Image-Round](https://github.com/cdb-boop/comfyui-image-round) Nodes
 
-![Screenshot of full node x4 workflow with advanced face enhancement, and using my custom "Image Rounding" node for Bringing Old Photos Back to Life in ComfyUI.](imgs/bopbtl-full-workflow-advanced-512-x4-upscale-round-pad-nearest-16-previews.png)
+May crash if image dimensions are not multiples of 8 or 16 pixels (depends on the model used).
+
+![Screenshot of full node workflow for Bringing Old Photos Back to Life in ComfyUI, using ComfyUI Image Round nodes](imgs/bopbtl-full-workflow-512-round-pad-nearest-16.png)
+
+![Screenshot of advanced face enhancement node workflow for Bringing Old Photos Back to Life in ComfyUI, using ComfyUI Image Round nodes.](imgs/bopbtl-enhance-face-advanced-512-round-pad-nearest-16.png)
+
+![Screenshot of full node x4 workflow with advanced face enhancement for Bringing Old Photos Back to Life in ComfyUI, using ComfyUI Image Round nodes](imgs/bopbtl-full-workflow-advanced-512-x4-upscale-round-pad-nearest-16-previews.png)
 
 ## 4. Hints
 
