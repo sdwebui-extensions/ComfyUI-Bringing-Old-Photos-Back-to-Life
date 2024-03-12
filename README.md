@@ -2,7 +2,7 @@
 
 Enhance images in [ComfyUI](https://github.com/comfyanonymous/ComfyUI). Optional features include automatic scratch removal and face enhancement. Based on [microsoft/Bringing-Old-Photos-Back-to-Life](https://github.com/microsoft/Bringing-Old-Photos-Back-to-Life).
 
-![Screenshot of full node workflow for Bringing Old Photos Back to Life in ComfyUI.](imgs/bopbtl-full-workflow.png)
+![Screenshot of full node workflow for Bringing Old Photos Back to Life in ComfyUI.](imgs/bopbtl-full-workflow-512.png)
 
 ## 1. Requirements
 
@@ -81,11 +81,11 @@ Set `device_ids` as a comma separated list of device ids (i.e. `0` or `1,2`). Us
 
 ### BOPBTL + Scratch Detection and Face Enhancement (Stages 1-4)
 
-![Screenshot of full node workflow for Bringing Old Photos Back to Life in ComfyUI.](imgs/bopbtl-full-workflow.png)
+![Screenshot of full node workflow for Bringing Old Photos Back to Life in ComfyUI.](imgs/bopbtl-full-workflow-512.png)
 
 ### Face Enhancement (Advanced) (Stages 2-4)
 
-![Screenshot of advanced face enhancement node workflow for Bringing Old Photos Back to Life in ComfyUI.](imgs/bopbtl-enhance-face-advanced.png)
+![Screenshot of advanced face enhancement node workflow for Bringing Old Photos Back to Life in ComfyUI.](imgs/bopbtl-enhance-face-advanced-512.png)
 
 ## License
 
