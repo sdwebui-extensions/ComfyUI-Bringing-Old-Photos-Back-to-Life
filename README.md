@@ -97,7 +97,7 @@ Set `device_ids` as a comma separated list of device ids (i.e. `0` or `1,2`). Us
 
 ### Using [ComfyUI-Image-Round](https://github.com/cdb-boop/comfyui-image-round) Nodes
 
-May crash if image dimensions are not multiples of 8 or 16 pixels (depends on the model used).
+Running the models may fail if image dimensions are not multiples of 8 or 16 pixels (depends on the model used).
 
 ![Screenshot of full node workflow for Bringing Old Photos Back to Life in ComfyUI, using ComfyUI Image Round nodes](imgs/bopbtl-full-workflow-512-round-pad-nearest-16.png)
 
