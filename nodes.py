@@ -256,14 +256,23 @@ class RestoreOldPhotos:
         restored_images = []
         for i in range(image.size()[0]):
             pil_image = torchvision.transforms.ToPILImage()(image[i]).convert("RGB")
-            if scratch_mask is None:
+            if not opt.Scratch_and_Quality_restore:
                 transformed_image, transformed_mask, _ = Restorer.transform_image(
                     pil_image, 
                     image_transform, 
                     opt.test_mode, 
                 )
             else:
-                mask = torch.stack([scratch_mask[i]])
+                if scratch_mask is not None:
+                    mask = torch.stack([scratch_mask[i]])
+                else:
+                    (n, _, h, w) = image.size()
+                    mask = torch.zeros(
+                        (n, h, w), 
+                        dtype=image.dtype, 
+                        layout=image.layout, 
+                        device=image.device, 
+                    )
                 pil_mask = torchvision.transforms.ToPILImage()(mask).convert("RGB")
                 transformed_image, transformed_mask, _ = Restorer.transform_image_and_mask(
                     pil_image, 
