@@ -342,7 +342,7 @@ class DetectFaces:
         return {
             "required": {
                 "dlib_model": ("DLIB_MODEL",),
-                "images": ("IMAGE",),
+                "image": ("IMAGE",),
                 "face_size": (
                     ["256", "512"], {
                     "default": "512",
@@ -351,17 +351,17 @@ class DetectFaces:
         }
 
     @staticmethod
-    def detect_faces_batch(dlib_model, images: torch.Tensor, face_size: str):
+    def detect_faces_batch(dlib_model, image: torch.Tensor, face_size: str):
         (face_detector, landmark_locator) = dlib_model
         face_size = int(face_size)
 
-        images = images.permute(0, 3, 1, 2)
+        image = image.permute(0, 3, 1, 2)
 
         face_counts = []
         aligned_faces = []
         faces_landmarks = []
-        for image in images:
-            pil_image = torchvision.transforms.ToPILImage()(image).convert("RGB")
+        for torch_image in image:
+            pil_image = torchvision.transforms.ToPILImage()(torch_image).convert("RGB")
             np_image = np.array(pil_image)
 
             landmarks = FaceDetector.get_face_landmarks(face_detector, landmark_locator, np_image)
@@ -377,8 +377,8 @@ class DetectFaces:
 
         return (face_counts, aligned_faces, faces_landmarks)
 
-    def run(self, dlib_model, images, face_size):
-        return DetectFaces.detect_faces_batch(dlib_model, images, face_size)
+    def run(self, dlib_model, image, face_size):
+        return DetectFaces.detect_faces_batch(dlib_model, image, face_size)
 
 class LoadFaceEnhancerModel:
     RETURN_TYPES = ("FACE_ENHANCE_MODEL",)
@@ -468,7 +468,7 @@ class EnhanceFaces:
 
         parts_list = face_parts
         if len(parts_list) == 0:
-            parts_list = [None for i in range(len(FaceTensorDataset.get_parts()))]
+            parts_list = [None for _ in range(len(FaceTensorDataset.get_parts()))]
         else:
             for i in range(len(parts_list)):
                 part = parts_list[i]
@@ -651,7 +651,7 @@ class DetectEnhanceBlendFaces:
             _, enhanced_faces = EnhanceFaces.enhance_faces(face_enhance_model, face_count, cropped_faces)
             return BlendFaces.blend_faces(image, face_count, enhanced_faces, face_landmarks)
         except DetectFaces.NoFacesDetected as e:
-            #print(e.message)
+            print("BOPBTL: " + e.message)
             return (image,)
 
     def run(self, image, dlib_model, face_enhance_model):
