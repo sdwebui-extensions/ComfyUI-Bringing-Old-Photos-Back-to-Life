@@ -1,12 +1,14 @@
 # ComfyUI-Bringing-Old-Photos-Back-to-Life
 
-Enhance images in [ComfyUI](https://github.com/comfyanonymous/ComfyUI). Optional features include automatic scratch removal and face enhancement. Based on [microsoft/Bringing-Old-Photos-Back-to-Life](https://github.com/microsoft/Bringing-Old-Photos-Back-to-Life).
+Enhance old or low-quality images in [ComfyUI](https://github.com/comfyanonymous/ComfyUI). Optional features include automatic scratch removal and face enhancement. Requires installing a number of small checkpoints and VAEs.
+
+Based on [microsoft/Bringing-Old-Photos-Back-to-Life](https://github.com/microsoft/Bringing-Old-Photos-Back-to-Life).
 
 ![Screenshot of full node workflow for Bringing Old Photos Back to Life in ComfyUI.](imgs/bopbtl-full-workflow-512.png)
 
 ## 1. Requirements
 
-Before installing, make sure that any virtual environment is activated and if needed, prepend the target python to the pip command.
+Before installing, make sure that any virtual environment is activated and if needed, prepend the target python executable before the pip command.
 
 ```shell
 cd ./ComfyUI-Bringing-Old-Photos-Back-to-Life/
@@ -89,17 +91,17 @@ Set `device_ids` as a comma separated list of device ids (i.e. `0` or `1,2`). Us
 
 ![Screenshot of advanced face enhancement node workflow for Bringing Old Photos Back to Life in ComfyUI.](imgs/bopbtl-enhance-face-advanced-512.png)
 
-### x4 BOPBTL + Scratch Detection and Face Enhancement (Advanced)
+### x4 BOPBTL + Scratch Detection and Face Enhancement (Advanced) (Stages 1-4)
 
 ![Screenshot of full node x4 workflow with advanced face enhancement for Bringing Old Photos Back to Life in ComfyUI.](imgs/bopbtl-full-workflow-advanced-512-x4-upscale-previews.png)
 
-#### Using [ComfyUI-Image-Round](https://github.com/cdb-boop/comfyui-image-round) Node
+#### Using [ComfyUI-Image-Round](https://github.com/cdb-boop/comfyui-image-round) Nodes
 
 ![Screenshot of full node x4 workflow with advanced face enhancement, and using my custom "Image Rounding" node for Bringing Old Photos Back to Life in ComfyUI.](imgs/bopbtl-full-workflow-advanced-512-x4-upscale-round-pad-nearest-16-previews.png)
 
 ## 4. Hints
 
-- Images may need to be scaled/cropped/padded to the nearest 8 or 16 pixels to avoid a crash. (Use something like my other [ComfyUI-Image-Round](https://github.com/cdb-boop/comfyui-image-round) node)
+- Images may need to be scaled/cropped/padded to the nearest 8 or 16 pixels to avoid a crash. (Use something like my other [ComfyUI-Image-Round](https://github.com/cdb-boop/comfyui-image-round) nodes.)
 - "Detect Faces (Dlib)" and "Enhance Faces" nodes will currently return the original image if no faces were found.
 
 ## License
