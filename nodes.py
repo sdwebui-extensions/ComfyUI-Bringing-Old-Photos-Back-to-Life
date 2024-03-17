@@ -118,6 +118,8 @@ class ScratchMask:
         input_size: str, 
         resize_method: str, 
     ):
+        input_dtype = image.dtype
+        input_device = image.device
         image = image.permute(0, 3, 1, 2)
         masks = []
         for i in range(image.size()[0]):
@@ -131,6 +133,7 @@ class ScratchMask:
         masks = torch.stack(masks)
         masks = masks.permute(1, 0, 2, 3)[0]
 
+        masks = masks.to(input_device, dtype=input_dtype)
         return (masks,)
 
     def run(self, scratch_model, image, input_size, resize_method):
@@ -252,6 +255,8 @@ class RestoreOldPhotos:
     def restore(image: torch.Tensor, bopbtl_models, scratch_mask: torch.Tensor = None):
         (opt, model, image_transform, mask_transform) = bopbtl_models
 
+        input_dtype = image.dtype
+        input_device = image.device
         image = image.permute(0, 3, 1, 2)
         restored_images = []
         for i in range(image.size()[0]):
@@ -287,6 +292,7 @@ class RestoreOldPhotos:
                 restored_images.append(restored_image)
         restored_images = torch.stack(restored_images)
         restored_images = restored_images.permute(0, 2, 3, 1)
+        restored_images = restored_images.to(input_device, dtype=input_dtype)
         return (restored_images,)
 
     def run(self, image, bopbtl_models, scratch_mask = None):
@@ -351,10 +357,12 @@ class DetectFaces:
         }
 
     @staticmethod
-    def detect_faces_batch(dlib_model, image: torch.Tensor, face_size: str, throw_error: bool = False):
+    def detect_faces(dlib_model, image: torch.Tensor, face_size: str, throw_error: bool = False):
         (face_detector, landmark_locator) = dlib_model
         face_size = int(face_size)
 
+        input_dtype = image.dtype
+        input_device = image.device
         image = image.permute(0, 3, 1, 2)
 
         face_counts = []
@@ -378,11 +386,12 @@ class DetectFaces:
             aligned_faces = image.permute(0, 2, 3, 1)
         else:
             aligned_faces = torch.stack(aligned_faces)
+        aligned_faces = aligned_faces.to(device=input_device, dtype=input_dtype)
 
         return ((face_counts, no_faces_detected), aligned_faces, faces_landmarks)
 
     def run(self, dlib_model, image, face_size):
-        return DetectFaces.detect_faces_batch(dlib_model, image, face_size)
+        return DetectFaces.detect_faces(dlib_model, image, face_size)
 
 class LoadFaceEnhancerModel:
     RETURN_TYPES = ("FACE_ENHANCE_MODEL",)
@@ -468,6 +477,8 @@ class EnhanceFaces:
         else:
             raise NotImplementedError("Unknown model face size!")
 
+        input_dtype = cropped_faces.dtype
+        input_device = cropped_faces.device
         cropped_faces = cropped_faces.permute(0, 3, 1, 2)
         image_list = []
         for image in cropped_faces:
@@ -509,6 +520,7 @@ class EnhanceFaces:
         enhanced_faces = enhanced_faces.permute(0, 2, 3, 1)
         for i in range(len(enhanced_faces)):
             enhanced_faces[i] = (enhanced_faces[i] + 1) / 2
+        enhanced_faces = enhanced_faces.to(input_device, dtype=input_dtype)
 
         return (face_count, enhanced_faces)
 
@@ -612,6 +624,10 @@ class BlendFaces:
         face_counts, no_faces_detected = face_count
         if no_faces_detected:
             return (original_image, )
+
+        input_dtype = original_image.dtype
+        input_device = original_image.device
+
         face_size = enhanced_cropped_faces.size()[2]
         np_image = tensor_images_to_numpy(original_image)
         np_enhanced_face = tensor_images_to_numpy(enhanced_cropped_faces)
@@ -624,6 +640,7 @@ class BlendFaces:
         )
         blended_images = [torch.from_numpy(img) for img in blended_images]
         blended_images = torch.stack(blended_images)
+        blended_images = blended_images.to(input_device, dtype=input_dtype)
         return (blended_images,)
 
     def run(self, original_image, face_count, enhanced_cropped_faces, face_landmarks):
@@ -655,18 +672,19 @@ class DetectEnhanceBlendFaces:
         }
 
     @staticmethod
-    def enhance_faces(image: torch.Tensor, dlib_model, face_enhance_model):
+    def enhance_faces(dlib_model, face_enhance_model, image: torch.Tensor):
         try:
             _, load_size = face_enhance_model
-            face_count, cropped_faces, face_landmarks = DetectFaces.detect_faces_batch(dlib_model, image, load_size, throw_error=True)
+            face_count, cropped_faces, face_landmarks = DetectFaces.detect_faces(dlib_model, image, load_size, throw_error=True)
             _, enhanced_faces = EnhanceFaces.enhance_faces(face_enhance_model, face_count, cropped_faces)
-            return BlendFaces.blend_faces(image, face_count, enhanced_faces, face_landmarks)
+            (blended_faces,) = BlendFaces.blend_faces(image, face_count, enhanced_faces, face_landmarks)
+            return (blended_faces,)
         except DetectFaces.NoFacesDetected as e:
             print("BOPBTL: " + e.message)
             return (image,)
 
-    def run(self, image, dlib_model, face_enhance_model):
-        return DetectEnhanceBlendFaces.enhance_faces(image, dlib_model, face_enhance_model)
+    def run(self, dlib_model, face_enhance_model, image):
+        return DetectEnhanceBlendFaces.enhance_faces(dlib_model, face_enhance_model, image)
 
 NODE_CLASS_MAPPINGS = {
     "BOPBTL_ScratchMask": ScratchMask,
