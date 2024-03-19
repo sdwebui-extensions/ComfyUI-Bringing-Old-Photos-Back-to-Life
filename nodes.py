@@ -31,7 +31,7 @@ def search_custom_model_dir(dir:str , ext: str): # The issue with this is that i
     models = []
     if os.path.isdir(dir):
         models = glob.glob(dir + os.sep + "**" + os.sep + "*" + ext, recursive=True)
-        models = [path[len(dir):] for path in models]
+        models = [path[len(dir) + 1:] for path in models]
     return models
 
 def tensor_images_to_numpy(images: torch.Tensor):
@@ -307,7 +307,7 @@ class LoadFaceDetectorModel:
     def __init__(self):
         pass
 
-    FACE_MODEL_PATH = "." + os.sep + "models" + os.sep + "facedetection" + os.sep
+    FACE_MODEL_PATH = os.path.normpath(folder_paths.models_dir + os.sep + "facedetection" + os.sep)
 
     @classmethod
     def INPUT_TYPES(self):
@@ -324,7 +324,7 @@ class LoadFaceDetectorModel:
         return ((face_detector, landmark_locator),)
 
     def run(self, shape_predictor_68_face_landmarks: str):
-        model_path = self.FACE_MODEL_PATH + shape_predictor_68_face_landmarks
+        model_path = os.path.normpath(self.FACE_MODEL_PATH + os.sep + shape_predictor_68_face_landmarks)
         return LoadFaceDetectorModel.load_model(model_path)
 
 class DetectFaces:
