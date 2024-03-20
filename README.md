@@ -23,7 +23,7 @@ You may encounter issues while trying to install dlib on Windows. Here are some 
 
 1. Manually install requirements.
 
-You may need to have [CMake](https://cmake.org/download/) already installed on your system to build Dlib.
+You may need to have [CMake](https://cmake.org/download/) already installed on your system and `CMake\bin` added to your PATH to build Dlib.
 
 ```shell
 path\to\python.exe -m pip install easydict matplotlib opencv-python scikit-image scipy
