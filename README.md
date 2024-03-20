@@ -19,7 +19,7 @@ PyTorch and TorchVision are also required, but should already be installed. (See
 
 ### Installation Troubleshooting
 
-It is possible you may encounter issues while trying to install dlib on Windows. Here are some possible solutions:
+You may encounter issues while trying to install dlib on Windows. Here are some possible solutions:
 
 1. Manually install requirements.
 
@@ -34,7 +34,7 @@ path\to\python.exe -m pip install dlib==19.24.1
 
 2. Find pre-built wheels online.
 
-Alternatively, some people online have been nice enough to have pre-built wheels for Dlib that can easily be installed. However, be aware that they may not be any built with newer versions of python.
+Alternatively, some people online have have pre-built wheels for Dlib, however, there may not be any built with your version of python.
 
 ```
 path\to\python.exe -m pip install path\to\dlib.whl
