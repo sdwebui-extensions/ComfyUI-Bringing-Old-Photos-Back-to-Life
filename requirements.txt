@@ -1,3 +1,4 @@
+cmake
 dlib==19.24.1
 easydict
 matplotlib
