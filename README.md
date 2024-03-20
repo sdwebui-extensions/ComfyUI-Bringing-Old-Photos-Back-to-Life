@@ -34,7 +34,7 @@ path\to\python.exe -m pip install dlib==19.24.1
 
 2. Find pre-built wheels online.
 
-Alternatively, some people online have have pre-built wheels for Dlib, however, there may not be any built with your version of python.
+Alternatively, some people have pre-built wheels for Dlib, however, there may not be any built with your version of python.
 
 ```
 path\to\python.exe -m pip install path\to\dlib.whl
