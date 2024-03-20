@@ -12,10 +12,33 @@ Before installing, make sure that any virtual environment is activated and if ne
 
 ```shell
 cd ./ComfyUI-Bringing-Old-Photos-Back-to-Life/
-pip install -r requirements.txt --upgrade
+path\to\python.exe pip install -r requirements.txt --upgrade
 ```
 
 PyTorch and TorchVision are also required, but should already be installed. (See the main ComfyUI repo for [installation details](https://github.com/comfyanonymous/ComfyUI?tab=readme-ov-file#installing).)
+
+### Installation Troubleshooting
+
+It is possible you may encounter issues while trying to install dlib on Windows. Here are some possible solutions:
+
+1. Manually install requirements.
+
+You may need to have [CMake](https://cmake.org/download/) already installed on your system to build Dlib.
+
+```shell
+path\to\python.exe -m pip install easydict matplotlib opencv-python scikit-image scipy
+
+path\to\python.exe -m pip install cmake
+path\to\python.exe -m pip install dlib==19.24.1
+```
+
+2. Find pre-built wheels online.
+
+Alternatively, some people online have been nice enough to have pre-built wheels for Dlib that can easily be installed. However, be aware that they may not be any built with newer versions of python.
+
+```
+path\to\python.exe -m pip install path\to\dlib.whl
+```
 
 ## 2. Models
 
