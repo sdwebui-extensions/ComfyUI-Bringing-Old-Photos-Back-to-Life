@@ -1,4 +1,6 @@
 dlib==19.24.1
 easydict
-scipy
 matplotlib
+opencv-python
+scikit-image
+scipy
