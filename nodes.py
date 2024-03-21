@@ -14,11 +14,8 @@ from .Global import detection as ScratchDetector
 from .Global import test as Restorer
 from .Global.options.test_options import TestOptions as RestoreOptions
 
-try:
-    from .Face_Detection import detect_all_dlib as FaceDetector
-    from .Face_Detection import align_warp_back_multiple_dlib as FaceBlender
-except Exception as error:
-    warnings.warn("BOPBTL: Unable to import Face_Detection. You may need to install Dlib with 'pip install dlib'.")
+from .Face_Detection import detect_all_dlib as FaceDetector
+from .Face_Detection import align_warp_back_multiple_dlib as FaceBlender
 
 from .Face_Enhancement import test_face as FaceEnhancer
 from .Face_Enhancement.options.test_options import TestOptions as FaceEnhancerOptions
