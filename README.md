@@ -133,6 +133,27 @@ Running the models may fail if image dimensions are not multiples of 8 or 16 pix
 - Images may need to be scaled/cropped/padded to the nearest 8 or 16 pixels to avoid a crash. (Use something like my other [ComfyUI-Image-Round](https://github.com/cdb-boop/comfyui-image-round) nodes.)
 - "Detect Faces (Dlib)" and "Enhance Faces" nodes will currently return the original image if no faces were found.
 
+## Citation
+
+```bibtex
+@inproceedings{wan2020bringing,
+title={Bringing Old Photos Back to Life},
+author={Wan, Ziyu and Zhang, Bo and Chen, Dongdong and Zhang, Pan and Chen, Dong and Liao, Jing and Wen, Fang},
+booktitle={Proceedings of the IEEE/CVF Conference on Computer Vision and Pattern Recognition},
+pages={2747--2757},
+year={2020}
+}
+```
+
+```bibtex
+@article{wan2020old,
+  title={Old Photo Restoration via Deep Latent Space Translation},
+  author={Wan, Ziyu and Zhang, Bo and Chen, Dongdong and Zhang, Pan and Chen, Dong and Liao, Jing and Wen, Fang},
+  journal={arXiv preprint arXiv:2009.07047},
+  year={2020}
+}
+```
+
 ## License
 
 The codes and the pretrained model in this repository are under the MIT license as specified by the LICENSE file. We use our labeled dataset to train the scratch detection model.
