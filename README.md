@@ -44,7 +44,7 @@ path\to\python.exe -m pip install path\to\dlib.whl
 
 ### BOPBTL Models (Stage 1)
 
-[Download - BOPBTL Models](https://facevc.blob.core.windows.net/zhanbo/old_photo/pretrain/Global/checkpoints.zip)
+[Download - BOPBTL Models](https://github.com/microsoft/Bringing-Old-Photos-Back-to-Life/releases/download/v1.0/global_checkpoints.zip)
 
 #### Load Restore Old Photos Model
 
@@ -93,7 +93,7 @@ Extract the following models and place them inside `models/facedetection/` (cust
 
 #### Load Face Enhancer Model
 
-[Download - Face Enhancement Models](https://facevc.blob.core.windows.net/zhanbo/old_photo/pretrain/Face_Enhancement/checkpoints.zip)
+[Download - Face Enhancement Models](https://github.com/microsoft/Bringing-Old-Photos-Back-to-Life/releases/download/v1.0/face_checkpoints.zip)
 
 Extract the following models and place them inside `models/checkpoints/`.
 

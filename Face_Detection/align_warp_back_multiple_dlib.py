@@ -482,8 +482,8 @@ def main(checkpoint_path: str, origin_url: str, replace_url: str, save_url: str,
                 enhanced_face = np.array(enhanced_face)
 
             # convert colorspace
-            A = cv2.cvtColor(aligned_face.astype("uint8"), cv2.COLOR_RGB2BGR)
-            B = cv2.cvtColor(enhanced_face.astype("uint8"), cv2.COLOR_RGB2BGR)
+            A = cv2.cvtColor(A.astype("uint8"), cv2.COLOR_RGB2BGR)
+            B = cv2.cvtColor(B.astype("uint8"), cv2.COLOR_RGB2BGR)
             B = match_histograms(B, A)  ## histogram color matching
             enhanced_face = cv2.cvtColor(B.astype("uint8"), cv2.COLOR_BGR2RGB)
 
