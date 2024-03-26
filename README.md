@@ -137,11 +137,11 @@ Running the models may fail if image dimensions are not multiples of 8 or 16 pix
 
 ```bibtex
 @inproceedings{wan2020bringing,
-title={Bringing Old Photos Back to Life},
-author={Wan, Ziyu and Zhang, Bo and Chen, Dongdong and Zhang, Pan and Chen, Dong and Liao, Jing and Wen, Fang},
-booktitle={Proceedings of the IEEE/CVF Conference on Computer Vision and Pattern Recognition},
-pages={2747--2757},
-year={2020}
+  title={Bringing Old Photos Back to Life},
+  author={Wan, Ziyu and Zhang, Bo and Chen, Dongdong and Zhang, Pan and Chen, Dong and Liao, Jing and Wen, Fang},
+  booktitle={Proceedings of the IEEE/CVF Conference on Computer Vision and Pattern Recognition},
+  pages={2747--2757},
+  year={2020}
 }
 ```
 
