@@ -54,22 +54,22 @@ Set `device_ids` as a comma separated list of device ids (i.e. `0` or `1,2`). Us
 
 Place in `models/vae/`.
 
-- VAE_A_quality/latest_net_G.pth
+- restoration/VAE_A_quality/latest_net_G.pth
 
 ##### vae_b
 
 Extract the following models and place them inside `models/vae/`.
 
-- VAE_B_quality/latest_net_G.pth
-- VAE_B_scratch/latest_net_G.pth (scratch_detection)
+- restoration/VAE_B_quality/latest_net_G.pth
+- restoration/VAE_B_scratch/latest_net_G.pth (scratch_detection)
 
 ##### mapping_net
 
 Extract the following models and place them inside `models/checkpoints/`.
 
-- mapping_quality/latest_net_mapping_net.pth
-- mapping_scratch/latest_net_mapping_net.pth (scratch_detection)
-- mapping_Patch_Attention/latest_net_mapping_net.pth (mapping_patch_attention)
+- restoration/mapping_quality/latest_net_mapping_net.pth
+- restoration/mapping_scratch/latest_net_mapping_net.pth (scratch_detection)
+- restoration/mapping_Patch_Attention/latest_net_mapping_net.pth (mapping_patch_attention)
 
 #### Load Scratch Mask Model
 
