@@ -74,7 +74,10 @@ def blend_mask(img, mask):
     return Image.fromarray((np_img * (1 - mask) + mask * 255.0).astype("uint8")).convert("RGB")
 
 
-def load_model(device_ids: int|str, checkpoint_path: str):
+def load_model(
+    device_ids, # str | int
+    checkpoint_path: str,
+):
     model = networks.UNet(
         in_channels=1,
         out_channels=1,
@@ -105,7 +108,7 @@ def load_model(device_ids: int|str, checkpoint_path: str):
 def detect_scratches(
     image: Image.Image, 
     model: networks.UNet, 
-    device_ids: int|str, 
+    device_ids, # str | int
     input_size: str, 
     resize_method: Image.Resampling=Image.Resampling.BICUBIC, 
 ) -> torch.Tensor:
