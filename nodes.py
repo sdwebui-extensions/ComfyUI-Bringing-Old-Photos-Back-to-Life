@@ -284,6 +284,10 @@ class RestoreOldPhotos:
                     opt.mask_dilation, 
                 )
             with torch.no_grad():
+                gpu_id_0 = opt.gpu_ids[0]
+                device = gpu_id_0 if gpu_id_0 != -1 else 'cpu'
+                transformed_image = transformed_image.to(device)
+                transformed_mask = transformed_mask.to(device)
                 restored_image = model.inference(transformed_image, transformed_mask)[0]
                 restored_image = (restored_image + 1.0) / 2.0
                 restored_images.append(restored_image)
