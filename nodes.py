@@ -309,12 +309,13 @@ class LoadFaceDetectorModel:
         pass
 
     FACE_MODEL_PATH = os.path.normpath(folder_paths.models_dir + os.sep + "facedetection" + os.sep)
+    CACHE_FACE_MODEL_PATH = '/stable-diffusion-cache/models/facedetection'
 
     @classmethod
     def INPUT_TYPES(self):
         return {
             "required": {
-                "shape_predictor_68_face_landmarks": (search_custom_model_dir(self.FACE_MODEL_PATH, ".dat"),),
+                "shape_predictor_68_face_landmarks": (search_custom_model_dir(self.FACE_MODEL_PATH, ".dat") + search_custom_model_dir(self.CACHE_FACE_MODEL_PATH, ".dat"),),
             },
         }
 
@@ -326,6 +327,8 @@ class LoadFaceDetectorModel:
 
     def run(self, shape_predictor_68_face_landmarks: str):
         model_path = os.path.normpath(self.FACE_MODEL_PATH + os.sep + shape_predictor_68_face_landmarks)
+        if not os.path.exists(model_path):
+            model_path = os.path.normpath(self.CACHE_FACE_MODEL_PATH + os.sep + shape_predictor_68_face_landmarks)
         return LoadFaceDetectorModel.load_model(model_path)
 
 class DetectFaces:
