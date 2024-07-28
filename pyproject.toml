@@ -10,6 +10,6 @@ Repository = "https://github.com/cdb-boop/ComfyUI-Bringing-Old-Photos-Back-to-Li
 #  Used by Comfy Registry https://comfyregistry.org
 
 [tool.comfy]
-PublisherId = "bringing-old-photos-back-to-life"
+PublisherId = "cdb-boop"
 DisplayName = "ComfyUI-Bringing-Old-Photos-Back-to-Life"
 Icon = ""
