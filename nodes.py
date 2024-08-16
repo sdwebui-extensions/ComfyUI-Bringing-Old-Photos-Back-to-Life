@@ -52,7 +52,7 @@ class BOPBTL_LoadScratchMaskModel:
     RETURN_TYPES = ("SCRATCH_MODEL",)
     RETURN_NAMES = ("scratch_model",)
     FUNCTION = "run"
-    CATEGORY = "loaders"
+    CATEGORY = "bringing old photos back to life/loaders"
     OUTPUT_NODE = True
 
     def __init__(self):
@@ -85,7 +85,7 @@ class BOPBTL_ScratchMask:
     RETURN_NAMES = ("mask",)
     FUNCTION = "run"
     OUTPUT_NODE = True
-    CATEGORY = "image"
+    CATEGORY = "bringing old photos back to life/image"
 
     INPUT_SIZE_METHODS = ["full_size", "resize_256", "scale_256"]
 
@@ -146,7 +146,7 @@ class BOPBTL_LoadRestoreOldPhotosModel:
     RETURN_TYPES = ("BOPBTL_MODELS",)
     RETURN_NAMES = ("bopbtl_models",)
     FUNCTION = "run"
-    CATEGORY = "loaders"
+    CATEGORY = "bringing old photos back to life/loaders"
     OUTPUT_NODE = True
 
     def __init__(self):
@@ -233,7 +233,7 @@ class BOPBTL_RestoreOldPhotos:
     RETURN_NAMES = ("image",)
     FUNCTION = "run"
     OUTPUT_NODE = True
-    CATEGORY = "image"
+    CATEGORY = "bringing old photos back to life/image"
 
     def __init__(self):
         pass
@@ -305,7 +305,7 @@ class BOPBTL_LoadFaceDetectorModel:
     RETURN_TYPES = ("DLIB_MODEL",)
     RETURN_NAMES = ("dlib_model",)
     FUNCTION = "run"
-    CATEGORY = "loaders"
+    CATEGORY = "bringing old photos back to life/loaders"
     OUTPUT_NODE = True
 
     def __init__(self):
@@ -336,7 +336,7 @@ class BOPBTL_DetectFaces:
     RETURN_NAMES = ("face_count", "cropped_faces", "face_landmarks")
     FUNCTION = "run"
     OUTPUT_NODE = True
-    CATEGORY = "image"
+    CATEGORY = "bringing old photos back to life/image"
 
     class NoFacesDetected(Exception):
         def __init__(self):
@@ -401,7 +401,7 @@ class BOPBTL_LoadFaceEnhancerModel:
     RETURN_TYPES = ("FACE_ENHANCE_MODEL",)
     RETURN_NAMES = ("face_enhance_model",)
     FUNCTION = "run"
-    CATEGORY = "loaders"
+    CATEGORY = "bringing old photos back to life/loaders"
     OUTPUT_NODE = True
 
     def __init__(self):
@@ -446,7 +446,7 @@ class BOPBTL_EnhanceFaces:
     RETURN_NAMES = ("face_count", "enhanced_cropped_faces")
     FUNCTION = "run"
     OUTPUT_NODE = True
-    CATEGORY = "image"
+    CATEGORY = "bringing old photos back to life/image"
 
     def __init__(self):
         pass
@@ -603,7 +603,7 @@ class BOPBTL_BlendFaces:
     RETURN_NAMES = ("images",)
     FUNCTION = "run"
     OUTPUT_NODE = True
-    CATEGORY = "image"
+    CATEGORY = "bringing old photos back to life/image"
 
     def __init__(self):
         pass
@@ -661,7 +661,7 @@ class BOPBTL_DetectEnhanceBlendFaces:
     RETURN_NAMES = ("image", )
     FUNCTION = "run"
     OUTPUT_NODE = True
-    CATEGORY = "image"
+    CATEGORY = "bringing old photos back to life/image"
 
     def __init__(self):
         pass

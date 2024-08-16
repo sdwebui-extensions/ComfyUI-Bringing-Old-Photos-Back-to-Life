@@ -15,17 +15,17 @@ NODE_CLASS_MAPPINGS = {
 }
 
 NODE_DISPLAY_NAME_MAPPINGS = {
-    "BOPBTL_ScratchMask": "Scratch Mask (Bringing Old Photos Back to Life)",
-    "BOPBTL_LoadScratchMaskModel": "Load Scratch Mask Model (Bringing Old Photos Back to Life)",
-    "BOPBTL_LoadRestoreOldPhotosModel": "Load Restore Old Photos Model (Bringing Old Photos Back to Life)",
-    "BOPBTL_RestoreOldPhotos": "Restore Old Photos (Bringing Old Photos Back to Life)",
-    "BOPBTL_LoadFaceDetectorModel": "Load Face Detector Model (dlib) (Bringing Old Photos Back to Life)",
-    "BOPBTL_DetectFaces": "Detect Faces (dlib) (Bringing Old Photos Back to Life)",
-    "BOPBTL_LoadFaceEnhancerModel": "Load Face Enhancer Model (Bringing Old Photos Back to Life)",
-    "BOPBTL_EnhanceFaces": "Enhance Faces (Bringing Old Photos Back to Life)",
-    "BOPBTL_EnhanceFacesAdvanced": "Enhance Faces (Advanced) (Bringing Old Photos Back to Life)",
-    "BOPBTL_BlendFaces": "Blend Faces (dlib) (Bringing Old Photos Back to Life)",
-    "BOPBTL_DetectEnhanceBlendFaces": "Detect-Enhance-Blend Faces (dlib) (Bringing Old Photos Back to Life)",
+    "BOPBTL_ScratchMask": "Scratch Mask",
+    "BOPBTL_LoadScratchMaskModel": "Load Scratch Mask Model",
+    "BOPBTL_LoadRestoreOldPhotosModel": "Load Restore Old Photos Model",
+    "BOPBTL_RestoreOldPhotos": "Restore Old Photos",
+    "BOPBTL_LoadFaceDetectorModel": "Load Face Detector Model (dlib)",
+    "BOPBTL_DetectFaces": "Detect Faces (dlib)",
+    "BOPBTL_LoadFaceEnhancerModel": "Load Face Enhancer Model",
+    "BOPBTL_EnhanceFaces": "Enhance Faces",
+    "BOPBTL_EnhanceFacesAdvanced": "Enhance Faces (Advanced)",
+    "BOPBTL_BlendFaces": "Blend Faces (dlib)",
+    "BOPBTL_DetectEnhanceBlendFaces": "Detect-Enhance-Blend Faces (dlib)",
 }
 
 __all__ = ['NODE_CLASS_MAPPINGS', 'NODE_DISPLAY_NAME_MAPPINGS']
