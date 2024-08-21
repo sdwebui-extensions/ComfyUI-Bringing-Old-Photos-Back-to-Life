@@ -2,7 +2,7 @@
 name = "bringing-old-photos-back-to-life"
 description = "Bringing Old Photos Back to Life in ComfyUI. Enhance old or low-quality images in ComfyUI. Optional features include automatic scratch removal and face enhancement. Requires installing a number of small checkpoints and VAEs. Based on microsoft/Bringing-Old-Photos-Back-to-Life."
 version = "1.0.2"
-license = { file = "LICENSE" }
+license = "LICENSE"
 dependencies = ["cmake", "dlib==19.24.1", "easydict", "matplotlib", "opencv-python", "scikit-image", "scipy"]
 
 [project.urls]
