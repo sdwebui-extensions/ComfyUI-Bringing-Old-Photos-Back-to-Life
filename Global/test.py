@@ -53,11 +53,33 @@ def data_transforms_rgb_old(img):
     return transforms.CenterCrop(256)(A)
 
 
-def irregular_hole_synthesize(img, mask):
+def irregular_hole_synthesize(img, mask, pad_mode=None, pad_constant_values=0, pad_reflect_type='even'):
 
     img_np = np.array(img).astype("uint8")
     mask_np = np.array(mask).astype("uint8")
     mask_np = mask_np / 255
+
+    if pad_mode is not None:
+        def pad(img, pad_width, mode, constant_values, reflect_type):
+            if pad_mode == "constant":
+                return np.pad(img, pad_width, mode=mode, constant_values=constant_values)
+            elif pad_mode == "reflect" or pad_mode == "symmetry":
+                return np.pad(img, pad_width, mode=mode, reflect_type=reflect_type)
+            else:
+                return np.pad(img, pad_width, mode=mode)
+
+        pad_height = img_np.shape[0] - mask_np.shape[0]
+        if pad_height > 0:
+            mask_np = pad(mask_np, ((0, pad_height), (0,0), (0,0)), mode=pad_mode, constant_values=pad_constant_values, reflect_type=pad_reflect_type)
+        elif pad_height < 0:
+            img_np = pad(img_np, ((0, -pad_height), (0,0), (0,0)), mode=pad_mode, constant_values=pad_constant_values, reflect_type=pad_reflect_type)
+
+        pad_height = img_np.shape[1] - mask_np.shape[1]
+        if pad_height > 0:
+            mask_np = pad(mask_np, ((0,0), (0, pad_height), (0,0)), mode=pad_mode, constant_values=pad_constant_values, reflect_type=pad_reflect_type)
+        elif pad_height < 0:
+            img_np = pad(img_np, ((0,0), (0, -pad_height), (0,0)), mode=pad_mode, constant_values=pad_constant_values, reflect_type=pad_reflect_type)
+
     img_new = img_np * (1 - mask_np) + mask_np * 255
 
     hole_img = Image.fromarray(img_new.astype("uint8")).convert("RGB")
@@ -134,14 +156,14 @@ def transform_image(input, img_transform, test_mode="Full"):
     mask = torch.zeros_like(input)
     return (input, mask, origin)
 
-def transform_image_and_mask(input, img_transform, mask, mask_transform, mask_dilation=0):
+def transform_image_and_mask(input, img_transform, mask, mask_transform, mask_dilation=0, pad_mode=None, pad_constant_values=0, pad_reflect_type=None):
     if mask_dilation != 0:
         kernel = np.ones((3,3),np.uint8)
         mask = np.array(mask)
         mask = cv2.dilate(mask,kernel,iterations = mask_dilation)
         mask = Image.fromarray(mask.astype('uint8'))
     origin = input
-    input = irregular_hole_synthesize(input, mask)
+    input = irregular_hole_synthesize(input, mask, pad_mode, pad_constant_values, pad_reflect_type)
     mask = mask_transform(mask)
     mask = mask[:1, :, :]  ## Convert to single channel
     mask = mask.unsqueeze(0)
@@ -204,7 +226,7 @@ def main(opt):
         if mask is None:
             input, mask, origin = transform_image(input, img_transform, opt.test_mode)
         else:
-            input, mask, origin = transform_image_and_mask(input, img_transform, mask, mask_transform, opt.mask_dilation)
+            input, mask, origin = transform_image_and_mask(input, img_transform, mask, mask_transform, opt.mask_dilation, 'edge')
 
         # restore image
         with torch.no_grad():

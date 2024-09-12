@@ -244,6 +244,9 @@ class BOPBTL_RestoreOldPhotos:
             "required": {
                 "bopbtl_models": ("BOPBTL_MODELS",),
                 "image": ("IMAGE",),
+                "pad_mode": (["edge", "constant", "reflect", "symmetric", "none"], {"default": "edge"}),
+                "pad_constant_value": ("INT", {"default": 0, "min": 0, "max": 255, "step": 1}),
+                "pad_reflect_type": (["even", "odd"], {"default": "even"}),
             },
             "optional": {
                 "scratch_mask": ("MASK",),
@@ -251,9 +254,11 @@ class BOPBTL_RestoreOldPhotos:
         }
 
     @staticmethod
-    def restore(image: torch.Tensor, bopbtl_models, scratch_mask: torch.Tensor = None):
+    def restore(image: torch.Tensor, bopbtl_models, pad_mode: str = None, pad_constant_value: int = 0, pad_reflect_type: str = None, scratch_mask: torch.Tensor = None):
         (opt, model, image_transform, mask_transform) = bopbtl_models
 
+        if pad_mode == "none":
+            pad_mode = None
         input_dtype = image.dtype
         input_device = image.device
         image = image.permute(0, 3, 1, 2)
@@ -284,6 +289,9 @@ class BOPBTL_RestoreOldPhotos:
                     pil_mask, 
                     mask_transform, 
                     opt.mask_dilation, 
+                    pad_mode, 
+                    pad_constant_value, 
+                    pad_reflect_type, 
                 )
             with torch.no_grad():
                 gpu_id_0 = opt.gpu_ids[0]
@@ -298,8 +306,8 @@ class BOPBTL_RestoreOldPhotos:
         restored_images = restored_images.to(input_device, dtype=input_dtype)
         return (restored_images,)
 
-    def run(self, image, bopbtl_models, scratch_mask = None):
-        return BOPBTL_RestoreOldPhotos.restore(image, bopbtl_models, scratch_mask)
+    def run(self, image, bopbtl_models, pad_mode, pad_constant_value, pad_reflect_type, scratch_mask = None):
+        return BOPBTL_RestoreOldPhotos.restore(image, bopbtl_models, pad_mode, pad_constant_value, pad_reflect_type, scratch_mask)
 
 class BOPBTL_LoadFaceDetectorModel:
     RETURN_TYPES = ("DLIB_MODEL",)
