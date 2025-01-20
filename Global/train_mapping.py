@@ -57,7 +57,7 @@ else:
     fd.write(str(model.mapping_net))
     fd.close()
 
-if opt.isTrain and len(opt.gpu_ids) > 1:
+if opt.isTrain and len(opt.gpu_ids) > 1 and -1 not in opt.gpu_ids and torch.cuda.is_available():
     model = torch.nn.DataParallel(model, device_ids=opt.gpu_ids)
 
 

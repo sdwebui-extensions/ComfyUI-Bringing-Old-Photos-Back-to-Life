@@ -48,10 +48,11 @@ UPSCALE_METHODS = {
     "lanczos" : Image.Resampling.LANCZOS, 
 }
 
-class LoadScratchMaskModel:
+class BOPBTL_LoadScratchMaskModel:
     RETURN_TYPES = ("SCRATCH_MODEL",)
     RETURN_NAMES = ("scratch_model",)
     FUNCTION = "run"
+    CATEGORY = "bringing old photos back to life/loaders"
     OUTPUT_NODE = True
 
     def __init__(self):
@@ -77,14 +78,14 @@ class LoadScratchMaskModel:
         model_path = folder_paths.get_full_path("checkpoints", scratch_model)
         if isinstance(model_path, tuple):
             model_path = model_path[0]
-        return LoadScratchMaskModel.load_model(model_path)
+        return BOPBTL_LoadScratchMaskModel.load_model(model_path)
 
-class ScratchMask:
+class BOPBTL_ScratchMask:
     RETURN_TYPES = ("MASK",)
     RETURN_NAMES = ("mask",)
     FUNCTION = "run"
     OUTPUT_NODE = True
-    CATEGORY = "image"
+    CATEGORY = "bringing old photos back to life/image"
 
     INPUT_SIZE_METHODS = ["full_size", "resize_256", "scale_256"]
 
@@ -134,17 +135,18 @@ class ScratchMask:
         return (masks,)
 
     def run(self, scratch_model, image, input_size, resize_method):
-        return ScratchMask.detect_scratches(
+        return BOPBTL_ScratchMask.detect_scratches(
             scratch_model, 
             image, 
             input_size, 
             resize_method, 
         )
 
-class LoadRestoreOldPhotosModel:
+class BOPBTL_LoadRestoreOldPhotosModel:
     RETURN_TYPES = ("BOPBTL_MODELS",)
     RETURN_NAMES = ("bopbtl_models",)
     FUNCTION = "run"
+    CATEGORY = "bringing old photos back to life/loaders"
     OUTPUT_NODE = True
 
     def __init__(self):
@@ -217,7 +219,7 @@ class LoadRestoreOldPhotosModel:
         vae_b, 
         vae_a
     ):
-        return LoadRestoreOldPhotosModel.load_models(
+        return BOPBTL_LoadRestoreOldPhotosModel.load_models(
             [int(n) for n in device_ids.split(",")], 
             True if scratch_detection == "True" else False, 
             True if mapping_patch_attention == "True" else False, 
@@ -226,12 +228,12 @@ class LoadRestoreOldPhotosModel:
             folder_paths.get_full_path("vae", vae_a), 
         )
 
-class RestoreOldPhotos:
+class BOPBTL_RestoreOldPhotos:
     RETURN_TYPES = ("IMAGE",)
     RETURN_NAMES = ("image",)
     FUNCTION = "run"
     OUTPUT_NODE = True
-    CATEGORY = "image"
+    CATEGORY = "bringing old photos back to life/image"
 
     def __init__(self):
         pass
@@ -242,6 +244,9 @@ class RestoreOldPhotos:
             "required": {
                 "bopbtl_models": ("BOPBTL_MODELS",),
                 "image": ("IMAGE",),
+                "pad_mode": (["edge", "constant", "reflect", "symmetric", "none"], {"default": "edge"}),
+                "pad_constant_value": ("INT", {"default": 0, "min": 0, "max": 255, "step": 1}),
+                "pad_reflect_type": (["even", "odd"], {"default": "even"}),
             },
             "optional": {
                 "scratch_mask": ("MASK",),
@@ -249,9 +254,11 @@ class RestoreOldPhotos:
         }
 
     @staticmethod
-    def restore(image: torch.Tensor, bopbtl_models, scratch_mask: torch.Tensor = None):
+    def restore(image: torch.Tensor, bopbtl_models, pad_mode: str = None, pad_constant_value: int = 0, pad_reflect_type: str = None, scratch_mask: torch.Tensor = None):
         (opt, model, image_transform, mask_transform) = bopbtl_models
 
+        if pad_mode == "none":
+            pad_mode = None
         input_dtype = image.dtype
         input_device = image.device
         image = image.permute(0, 3, 1, 2)
@@ -282,6 +289,9 @@ class RestoreOldPhotos:
                     pil_mask, 
                     mask_transform, 
                     opt.mask_dilation, 
+                    pad_mode, 
+                    pad_constant_value, 
+                    pad_reflect_type, 
                 )
             with torch.no_grad():
                 gpu_id_0 = opt.gpu_ids[0]
@@ -296,20 +306,22 @@ class RestoreOldPhotos:
         restored_images = restored_images.to(input_device, dtype=input_dtype)
         return (restored_images,)
 
-    def run(self, image, bopbtl_models, scratch_mask = None):
-        return RestoreOldPhotos.restore(image, bopbtl_models, scratch_mask)
+    def run(self, image, bopbtl_models, pad_mode, pad_constant_value, pad_reflect_type, scratch_mask = None):
+        return BOPBTL_RestoreOldPhotos.restore(image, bopbtl_models, pad_mode, pad_constant_value, pad_reflect_type, scratch_mask)
 
-class LoadFaceDetectorModel:
+class BOPBTL_LoadFaceDetectorModel:
     RETURN_TYPES = ("DLIB_MODEL",)
     RETURN_NAMES = ("dlib_model",)
     FUNCTION = "run"
+    CATEGORY = "bringing old photos back to life/loaders"
     OUTPUT_NODE = True
 
     def __init__(self):
         pass
 
     FACE_MODEL_PATH = os.path.normpath(folder_paths.models_dir + os.sep + "facedetection" + os.sep)
-    CACHE_FACE_MODEL_PATH = '/stable-diffusion-cache/models/facedetection'
+    if os.path.exists('/stable-diffusion-cache/models/facedetection'):
+        CACHE_FACE_MODEL_PATH = '/stable-diffusion-cache/models/facedetection'
 
     @classmethod
     def INPUT_TYPES(self):
@@ -329,14 +341,14 @@ class LoadFaceDetectorModel:
         model_path = os.path.normpath(self.FACE_MODEL_PATH + os.sep + shape_predictor_68_face_landmarks)
         if not os.path.exists(model_path):
             model_path = os.path.normpath(self.CACHE_FACE_MODEL_PATH + os.sep + shape_predictor_68_face_landmarks)
-        return LoadFaceDetectorModel.load_model(model_path)
+        return BOPBTL_LoadFaceDetectorModel.load_model(model_path)
 
-class DetectFaces:
+class BOPBTL_DetectFaces:
     RETURN_TYPES = ("FACE_COUNT", "IMAGE", "FACE_LANDMARKS")
     RETURN_NAMES = ("face_count", "cropped_faces", "face_landmarks")
     FUNCTION = "run"
     OUTPUT_NODE = True
-    CATEGORY = "image"
+    CATEGORY = "bringing old photos back to life/image"
 
     class NoFacesDetected(Exception):
         def __init__(self):
@@ -386,7 +398,7 @@ class DetectFaces:
         no_faces_detected = len(aligned_faces) == 0
         if no_faces_detected:
             if throw_error:
-                raise DetectFaces.NoFacesDetected()
+                raise BOPBTL_DetectFaces.NoFacesDetected()
             aligned_faces = image.permute(0, 2, 3, 1)
         else:
             aligned_faces = torch.stack(aligned_faces)
@@ -395,12 +407,13 @@ class DetectFaces:
         return ((face_counts, no_faces_detected), aligned_faces, faces_landmarks)
 
     def run(self, dlib_model, image, face_size):
-        return DetectFaces.detect_faces(dlib_model, image, face_size)
+        return BOPBTL_DetectFaces.detect_faces(dlib_model, image, face_size)
 
-class LoadFaceEnhancerModel:
+class BOPBTL_LoadFaceEnhancerModel:
     RETURN_TYPES = ("FACE_ENHANCE_MODEL",)
     RETURN_NAMES = ("face_enhance_model",)
     FUNCTION = "run"
+    CATEGORY = "bringing old photos back to life/loaders"
     OUTPUT_NODE = True
 
     def __init__(self):
@@ -438,14 +451,14 @@ class LoadFaceEnhancerModel:
         return ((model, load_size),)
 
     def run(self, device_ids, face_enhance_model, model_face_size):
-        return LoadFaceEnhancerModel.load_model(device_ids, face_enhance_model, model_face_size)
+        return BOPBTL_LoadFaceEnhancerModel.load_model(device_ids, face_enhance_model, model_face_size)
 
-class EnhanceFaces:
+class BOPBTL_EnhanceFaces:
     RETURN_TYPES = ("FACE_COUNT", "IMAGE")
     RETURN_NAMES = ("face_count", "enhanced_cropped_faces")
     FUNCTION = "run"
     OUTPUT_NODE = True
-    CATEGORY = "image"
+    CATEGORY = "bringing old photos back to life/image"
 
     def __init__(self):
         pass
@@ -580,14 +593,14 @@ class EnhanceFaces:
             for i in range(len(parts)):
                 if parts[i] is None:
                     parts[i] = face_parts[i]
-        return EnhanceFaces.enhance_faces(
+        return BOPBTL_EnhanceFaces.enhance_faces(
             face_enhance_model, 
             face_count, 
             cropped_faces, 
             parts,
         )
 
-class EnhanceFacesAdvanced(EnhanceFaces):
+class BOPBTL_EnhanceFacesAdvanced(BOPBTL_EnhanceFaces):
     @classmethod
     def INPUT_TYPES(self):
         input_types = super().INPUT_TYPES()
@@ -597,12 +610,12 @@ class EnhanceFacesAdvanced(EnhanceFaces):
             optional["part_" + part] = ("IMAGE,")
         return input_types
 
-class BlendFaces:
+class BOPBTL_BlendFaces:
     RETURN_TYPES = ("IMAGE",)
     RETURN_NAMES = ("images",)
     FUNCTION = "run"
     OUTPUT_NODE = True
-    CATEGORY = "image"
+    CATEGORY = "bringing old photos back to life/image"
 
     def __init__(self):
         pass
@@ -648,19 +661,19 @@ class BlendFaces:
         return (blended_images,)
 
     def run(self, original_image, face_count, enhanced_cropped_faces, face_landmarks):
-        return BlendFaces.blend_faces(
+        return BOPBTL_BlendFaces.blend_faces(
             original_image, 
             face_count, 
             enhanced_cropped_faces, 
             face_landmarks, 
         )
 
-class DetectEnhanceBlendFaces:
+class BOPBTL_DetectEnhanceBlendFaces:
     RETURN_TYPES = ("IMAGE", )
     RETURN_NAMES = ("image", )
     FUNCTION = "run"
     OUTPUT_NODE = True
-    CATEGORY = "image"
+    CATEGORY = "bringing old photos back to life/image"
 
     def __init__(self):
         pass
@@ -679,41 +692,13 @@ class DetectEnhanceBlendFaces:
     def enhance_faces(dlib_model, face_enhance_model, image: torch.Tensor):
         try:
             _, load_size = face_enhance_model
-            face_count, cropped_faces, face_landmarks = DetectFaces.detect_faces(dlib_model, image, load_size, throw_error=True)
-            _, enhanced_faces = EnhanceFaces.enhance_faces(face_enhance_model, face_count, cropped_faces)
-            (blended_faces,) = BlendFaces.blend_faces(image, face_count, enhanced_faces, face_landmarks)
+            face_count, cropped_faces, face_landmarks = BOPBTL_DetectFaces.detect_faces(dlib_model, image, load_size, throw_error=True)
+            _, enhanced_faces = BOPBTL_EnhanceFaces.enhance_faces(face_enhance_model, face_count, cropped_faces)
+            (blended_faces,) = BOPBTL_BlendFaces.blend_faces(image, face_count, enhanced_faces, face_landmarks)
             return (blended_faces,)
-        except DetectFaces.NoFacesDetected as e:
+        except BOPBTL_DetectFaces.NoFacesDetected as e:
             print("BOPBTL: " + e.message)
             return (image,)
 
     def run(self, dlib_model, face_enhance_model, image):
-        return DetectEnhanceBlendFaces.enhance_faces(dlib_model, face_enhance_model, image)
-
-NODE_CLASS_MAPPINGS = {
-    "BOPBTL_ScratchMask": ScratchMask,
-    "BOPBTL_LoadScratchMaskModel": LoadScratchMaskModel,
-    "BOPBTL_LoadRestoreOldPhotosModel": LoadRestoreOldPhotosModel,
-    "BOPBTL_RestoreOldPhotos": RestoreOldPhotos,
-    "BOPBTL_LoadFaceDetectorModel": LoadFaceDetectorModel,
-    "BOPBTL_DetectFaces": DetectFaces,
-    "BOPBTL_LoadFaceEnhancerModel": LoadFaceEnhancerModel,
-    "BOPBTL_EnhanceFaces": EnhanceFaces,
-    "BOPBTL_EnhanceFacesAdvanced": EnhanceFacesAdvanced,
-    "BOPBTL_BlendFaces": BlendFaces,
-    "BOPBTL_DetectEnhanceBlendFaces": DetectEnhanceBlendFaces,
-}
-
-NODE_DISPLAY_NAME_MAPPINGS = {
-    "BOPBTL_ScratchMask": "Scratch Mask",
-    "BOPBTL_LoadScratchMaskModel": "Load Scratch Mask Model",
-    "BOPBTL_LoadRestoreOldPhotosModel": "Load Restore Old Photos Model",
-    "BOPBTL_RestoreOldPhotos": "Restore Old Photos",
-    "BOPBTL_LoadFaceDetectorModel": "Load Face Detector Model (Dlib)",
-    "BOPBTL_DetectFaces": "Detect Faces (Dlib)",
-    "BOPBTL_LoadFaceEnhancerModel": "Load Face Enhancer Model",
-    "BOPBTL_EnhanceFaces": "Enhance Faces",
-    "BOPBTL_EnhanceFacesAdvanced": "Enhance Faces (Advanced)",
-    "BOPBTL_BlendFaces": "Blend Faces (Dlib)",
-    "BOPBTL_DetectEnhanceBlendFaces": "Detect-Enhance-Blend Faces (dlib)",
-}
+        return BOPBTL_DetectEnhanceBlendFaces.enhance_faces(dlib_model, face_enhance_model, image)

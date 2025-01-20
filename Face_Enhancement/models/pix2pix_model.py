@@ -247,4 +247,4 @@ class Pix2PixModel(torch.nn.Module):
         return eps.mul(std) + mu
 
     def use_gpu(self):
-        return len(self.opt.gpu_ids) > 0
+        return len(self.opt.gpu_ids) > 0 and -1 not in self.opt.gpu_ids

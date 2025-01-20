@@ -75,9 +75,10 @@ def blend_mask(img, mask):
 
 
 def load_model(
-    device_ids, # str | int
+    device_ids, # str | int | torch.device
     checkpoint_path: str,
 ):
+    device_ids = str(device_ids)
     model = networks.UNet(
         in_channels=1,
         out_channels=1,
@@ -88,7 +89,7 @@ def load_model(
         batch_norm=True,
         up_mode="upsample",
         with_tanh=False,
-        sync_bn=True,
+        sync_bn=len(device_ids) > 0 and "-1" not in device_ids and "cpu" != device_ids and torch.cuda.is_available(),
         antialiasing=True,
     )
     checkpoint = torch.load(checkpoint_path, map_location="cpu")
@@ -97,7 +98,7 @@ def load_model(
         device_ids = int(device_ids)
     except:
         pass
-    if type(device_ids) is int and device_ids < 0:
+    if device_ids == "cpu" or (type(device_ids) is int and device_ids < 0):
         model.cpu()
     else:
         model.to(device_ids)
